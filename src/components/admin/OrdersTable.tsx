@@ -15,17 +15,10 @@ import {
   XCircle,
   CreditCard,
   Banknote,
-  QrCode
+  QrCode,
+  Printer
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -38,18 +31,11 @@ import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { OrderDetailDialog } from './OrderDetailDialog';
 import { useUpdateOrderStatus } from '@/hooks/useOrders';
 import { Order, OrderStatus } from '@/types';
+import { toast } from 'sonner';
 
 interface OrdersTableProps {
   orders: Order[];
 }
-
-const statusActions: { status: OrderStatus; label: string; icon: React.ElementType }[] = [
-  { status: 'pending', label: 'Aguardando', icon: Clock },
-  { status: 'preparing', label: 'Em preparo', icon: ChefHat },
-  { status: 'out_for_delivery', label: 'Saiu para entrega', icon: Truck },
-  { status: 'delivered', label: 'Entregue', icon: CheckCircle },
-  { status: 'cancelled', label: 'Cancelado', icon: XCircle },
-];
 
 export function OrdersTable({ orders }: OrdersTableProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -62,13 +48,9 @@ export function OrdersTable({ orders }: OrdersTableProps) {
     });
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const handlePrint = (order: Order) => {
+    toast.info(`Imprimindo pedido #${order.id.slice(0, 8)}...`);
+    // Future implementation of thermal printing logic
   };
 
   if (orders.length === 0) {
@@ -97,6 +79,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
             {[...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((order) => {
               const minutes = Math.floor((new Date().getTime() - new Date(order.created_at).getTime()) / 60000);
               const isDelayed = (order.status === 'pending' && minutes > 15) || (order.status === 'preparing' && minutes > 30);
+              const showWhatsApp = order.origin === 'whatsapp' || order.origin === 'site';
               
               return (
                 <TableRow key={order.id} className={isDelayed ? "bg-destructive/5" : ""}>
@@ -132,7 +115,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                       <p className="font-bold text-base leading-none mb-1">{order.customer_name}</p>
                       <div className="flex items-center gap-3">
                         <p className="text-xs text-muted-foreground font-mono">#{order.id.slice(0, 8)}</p>
-                        {order.customer_phone && (
+                        {showWhatsApp && order.customer_phone && (
                           <a 
                             href={`https://wa.me/55${order.customer_phone.replace(/\D/g, '')}`} 
                             target="_blank" 
@@ -161,6 +144,16 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1 sm:gap-2">
+                       <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => handlePrint(order)}
+                        className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-foreground"
+                        title="Imprimir Pedido"
+                      >
+                        <Printer className="h-4 w-4" />
+                      </Button>
+
                       <Button 
                         variant="outline" 
                         size="icon" 
@@ -174,7 +167,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                         <Button 
                           size="sm" 
                           className="h-8 sm:h-9 bg-primary hover:bg-primary/90 text-white gap-1 px-2 sm:px-4 text-[10px] sm:text-xs font-bold"
-                          onClick={() => updateStatus.mutate({ id: order.id, status: 'preparing' })}
+                          onClick={() => updateStatus.mutate({ order, status: 'preparing' })}
                         >
                           <Play className="h-3 w-3 fill-current hidden xs:block" />
                           PREPARAR
@@ -185,7 +178,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                         <Button 
                           size="sm" 
                           className="h-8 sm:h-9 bg-blue-600 hover:bg-blue-700 text-white gap-1 px-2 sm:px-4 text-[10px] sm:text-xs font-bold"
-                          onClick={() => updateStatus.mutate({ id: order.id, status: 'out_for_delivery' })}
+                          onClick={() => updateStatus.mutate({ order, status: 'out_for_delivery' })}
                         >
                           <Truck className="h-3 w-3 hidden xs:block" />
                           ENVIAR
@@ -196,7 +189,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                         <Button 
                           size="sm" 
                           className="h-8 sm:h-9 bg-green-600 hover:bg-green-700 text-white gap-1 px-2 sm:px-4 text-[10px] sm:text-xs font-bold"
-                          onClick={() => updateStatus.mutate({ id: order.id, status: 'delivered' })}
+                          onClick={() => updateStatus.mutate({ order, status: 'delivered' })}
                         >
                           <CheckCircle className="h-3 w-3 hidden xs:block" />
                           CONCLUIR
@@ -211,7 +204,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                           className="h-8 w-8 text-destructive hover:bg-destructive/10"
                           onClick={() => {
                             if (window.confirm('Tem certeza que deseja cancelar este pedido?')) {
-                              updateStatus.mutate({ id: order.id, status: 'cancelled' });
+                              updateStatus.mutate({ order, status: 'cancelled' });
                             }
                           }}
                         >
@@ -235,3 +228,4 @@ export function OrdersTable({ orders }: OrdersTableProps) {
     </>
   );
 }
+

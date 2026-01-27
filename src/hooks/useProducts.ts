@@ -56,3 +56,18 @@ export function useDeleteProduct() {
     },
   });
 }
+
+export function useDeleteAllProducts() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: () => productService.deleteAllProducts(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Todos os produtos foram removidos!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao remover produtos: ' + error.message);
+    },
+  });
+}

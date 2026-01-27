@@ -121,5 +121,25 @@ export const orderService = {
     
     const updatedSnap = await getDoc(docRef);
     return { id, ...updatedSnap.data() } as Order;
+  },
+
+  async deleteAllOrders(): Promise<void> {
+    const ordersCol = collection(db, "orders");
+    const snapshot = await getDocs(ordersCol);
+    
+    const itemsCol = collection(db, "order_items");
+    const itemsSnapshot = await getDocs(itemsCol);
+
+    const batch = writeBatch(db);
+    
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    itemsSnapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
   }
 };

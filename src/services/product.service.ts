@@ -9,6 +9,7 @@ import {
   query, 
   orderBy,
   Timestamp,
+  writeBatch,
   serverTimestamp 
 } from "firebase/firestore";
 import { Product } from '@/types';
@@ -59,5 +60,17 @@ export const productService = {
   async deleteProduct(id: string): Promise<void> {
     const docRef = doc(db, "products", id);
     await deleteDoc(docRef);
+  },
+
+  async deleteAllProducts(): Promise<void> {
+    const productsCol = collection(db, "products");
+    const snapshot = await getDocs(productsCol);
+    const batch = writeBatch(db);
+    
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
   }
 };

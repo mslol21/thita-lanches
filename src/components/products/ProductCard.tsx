@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Product } from '@/types';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
@@ -12,9 +12,13 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
     addItem(product);
-    toast.success(`${product.name} adicionado ao carrinho!`);
+    toast.success(`${product.name} adicionado!`, {
+      icon: '🍔',
+      className: 'font-bold'
+    });
   };
 
   const formatPrice = (price: number) => {
@@ -25,43 +29,34 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="group overflow-hidden shadow-product hover:shadow-product-hover transition-all duration-300 bg-card">
-      <div className="aspect-square overflow-hidden bg-muted">
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-6xl">
-            🍔
+    <Card 
+      className="group overflow-hidden border border-muted/50 rounded-2xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 bg-white cursor-pointer active:scale-[0.98]"
+      onClick={() => {/* To be used for opening details modal */}}
+    >
+      <div className="flex items-center justify-between p-5 gap-4">
+        <div className="flex-1 space-y-1">
+          <h3 className="font-bold text-lg text-foreground tracking-tight group-hover:text-primary transition-colors">
+            {product.name}
+          </h3>
+          {product.description && (
+            <p className="text-muted-foreground text-sm font-medium line-clamp-2 leading-snug pr-4">
+              {product.description}
+            </p>
+          )}
+          <div className="pt-1">
+            <span className="font-black text-lg text-primary">
+              {formatPrice(product.price)}
+            </span>
           </div>
-        )}
-      </div>
-      <CardContent className="p-4">
-        <h3 className="font-display font-semibold text-lg text-foreground line-clamp-1">
-          {product.name}
-        </h3>
-        {product.description && (
-          <p className="text-muted-foreground text-sm mt-1 line-clamp-2">
-            {product.description}
-          </p>
-        )}
-        <div className="flex items-center justify-between mt-4">
-          <span className="font-bold text-xl text-primary">
-            {formatPrice(product.price)}
-          </span>
-          <Button 
-            size="sm" 
-            onClick={handleAddToCart}
-            className="gap-1"
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar
-          </Button>
         </div>
-      </CardContent>
+
+        <button 
+          onClick={handleAddToCart}
+          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm active:scale-90 flex-shrink-0"
+        >
+          <Plus className="h-6 w-6 stroke-[3]" />
+        </button>
+      </div>
     </Card>
   );
 }

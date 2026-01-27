@@ -10,22 +10,25 @@ import {
   Truck,
   CheckCircle,
   ShieldAlert,
-  History,
   BarChart3,
-  Filter,
   Globe,
   MessageSquare,
   Store,
-  XCircle
+  LayoutDashboard,
+  List,
+  Settings2,
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/hooks/useOrders';
-import { useProducts } from '@/hooks/useProducts';
+import { useOrders, useDeleteAllOrders } from '@/hooks/useOrders';
+import { useProducts, useDeleteAllProducts } from '@/hooks/useProducts';
 import { OrdersTable } from '@/components/admin/OrdersTable';
+import { OrdersKanban } from '@/components/admin/OrdersKanban';
 import { ProductsTable } from '@/components/admin/ProductsTable';
 import { ProductDialog } from '@/components/admin/ProductDialog';
 import { ManualOrderDialog } from '@/components/admin/ManualOrderDialog';
@@ -40,7 +43,18 @@ export default function AdminDashboard() {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [manualOrderDialogOpen, setManualOrderDialogOpen] = useState(false);
   const [originFilter, setOriginFilter] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   const [statusTab, setStatusTab] = useState<'active' | 'cancelled'>('active');
+
+  const { mutate: deleteAllOrders, isPending: isDeletingOrders } = useDeleteAllOrders();
+  const { mutate: deleteAllProducts, isPending: isDeletingProducts } = useDeleteAllProducts();
+
+  const handleResetSystem = () => {
+    if (confirm('⚠️ ATENÇÃO: Isso irá APAGAR TODOS os pedidos e produtos permanentemente. Tem certeza?')) {
+      deleteAllOrders();
+      deleteAllProducts();
+    }
+  };
 
   const ordersByStatus = (status: OrderStatus) => 
     orders.filter(o => o.status === status);
@@ -57,85 +71,69 @@ export default function AdminDashboard() {
   const pendingOrders = ordersByStatus('pending');
   const preparingOrders = ordersByStatus('preparing');
 
-  // Pedidos atrasados: pendentes > 15min ou preparando > 30min
   const delayedOrders = orders.filter(o => 
     (o.status === 'pending' && getElapsedMinutes(o.created_at) > 15) ||
     (o.status === 'preparing' && getElapsedMinutes(o.created_at) > 30)
   );
 
-  const activeOrders = orders.filter(o => o.status !== 'delivered');
-  const oldestOrder = activeOrders.length > 0 
-    ? [...activeOrders].sort((a, b) => {
-        const da = new Date(a.created_at || 0).getTime();
-        const db = new Date(b.created_at || 0).getTime();
-        return da - db;
-      })[0]
-    : null;
-
   const stats = [
     { 
-      label: 'Pendentes (Ação!)', 
+      label: 'Pendentes Hoje', 
       value: pendingOrders.length, 
       icon: Clock,
-      color: pendingOrders.length > 0 ? 'text-destructive animate-pulse font-bold' : 'text-muted-foreground'
+      color: pendingOrders.length > 0 ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground'
     },
     { 
-      label: 'Atrasados ⚠️', 
+      label: 'Pedidos em Atraso', 
       value: delayedOrders.length, 
       icon: ShieldAlert,
-      color: delayedOrders.length > 0 ? 'text-destructive shadow-sm' : 'text-muted-foreground'
+      color: delayedOrders.length > 0 ? 'text-destructive bg-destructive/10 animate-pulse' : 'text-muted-foreground'
     },
     { 
       label: 'Em Preparo', 
       value: preparingOrders.length, 
       icon: ChefHat,
-      color: 'text-primary'
+      color: 'text-blue-500 bg-blue-500/10'
     },
     { 
-      label: 'Mais Antigo', 
-      value: oldestOrder ? `${getElapsedMinutes(oldestOrder.created_at)} min` : '--', 
-      icon: History,
-      color: oldestOrder && getElapsedMinutes(oldestOrder.created_at) > 20 ? 'text-destructive font-bold' : 'text-foreground'
+      label: 'Total Ativos', 
+      value: orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length, 
+      icon: ShoppingBag,
+      color: 'text-primary bg-primary/10'
     },
   ];
 
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
+      <header className="bg-sidebar text-sidebar-foreground border-b border-sidebar-border sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Logo" className="h-8 w-auto brightness-0 invert" />
-              <div>
-                <span className="font-display font-bold text-lg text-sidebar-primary uppercase tracking-wider">
-                  Thita Lanches
-                </span>
-                <span className="text-xs text-sidebar-foreground/60 block">
-                  Painel Administrativo
-                </span>
-              </div>
+              <span className="font-display font-black text-xl text-primary uppercase tracking-tighter">
+                TALITA PINHA<span className="text-accent italic ml-1">ADMIN</span>
+              </span>
             </div>
+            
             <div className="flex items-center gap-4">
               <Button 
                 onClick={() => setManualOrderDialogOpen(true)}
-                className="bg-primary text-white hover:bg-primary/90 gap-2 font-bold h-10 px-6 rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105"
+                className="bg-primary text-white hover:bg-primary/90 gap-2 font-black h-10 px-6 rounded-full shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
                 <Plus className="h-5 w-5" />
-                NOVO PEDIDO
+                NOVO PEDIDO (BALCÃO)
               </Button>
-              <Button variant="ghost" size="sm" asChild className="text-sidebar-foreground hover:text-sidebar-foreground">
-                <Link to="/">Ver Cardápio</Link>
+              <Button variant="ghost" size="sm" asChild className="text-sidebar-foreground/70 hover:text-white hidden sm:flex">
+                <Link to="/" target="_blank">Ver Cardápio</Link>
               </Button>
               <Button 
                 variant="ghost" 
-                size="sm" 
+                size="icon" 
                 onClick={logout}
-                className="text-sidebar-foreground hover:text-sidebar-foreground gap-2"
+                className="text-sidebar-foreground/70 hover:text-destructive transition-colors ml-2"
+                title="Sair"
               >
-                <LogOut className="h-4 w-4" />
-                Sair
+                <LogOut className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -143,146 +141,223 @@ export default function AdminDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat) => (
-            <Card key={stat.label}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-muted ${stat.color}`}>
-                    <stat.icon className="h-5 w-5" />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="container mx-auto px-4 py-6 flex flex-col h-full">
+          {/* Stats Bar */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {stats.map((stat) => (
+              <Card key={stat.label} className="border-none shadow-sm bg-card/50">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${stat.color}`}>
+                    <stat.icon className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    <p className="text-2xl font-black leading-none">{stat.value}</p>
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mt-1">{stat.label}</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="orders" className="space-y-6">
-          <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-            <TabsList className="inline-flex w-auto sm:w-full max-w-2xl bg-muted/50 p-1">
-              <TabsTrigger value="orders" className="gap-2 px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <ShoppingBag className="h-4 w-4" />
-                Pedidos
-              </TabsTrigger>
-              <TabsTrigger value="products" className="gap-2 px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Package className="h-4 w-4" />
-                Produtos
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2 px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <BarChart3 className="h-4 w-4" />
-                Análises
-              </TabsTrigger>
-            </TabsList>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
-          <TabsContent value="orders">
-            <Card>
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
-                <div>
-                  <CardTitle>Fluxo de Pedidos</CardTitle>
-                  <CardDescription>Gerencie as ordens em tempo real</CardDescription>
-                </div>
-                
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex bg-muted p-1 rounded-md mr-4">
-                    <Button 
-                      variant={statusTab === 'active' ? 'secondary' : 'ghost'} 
-                      size="sm" 
-                      onClick={() => setStatusTab('active')}
-                      className="h-8 text-xs font-bold"
-                    >
-                      ATIVOS
-                    </Button>
-                    <Button 
-                      variant={statusTab === 'cancelled' ? 'secondary' : 'ghost'} 
-                      size="sm" 
-                      onClick={() => setStatusTab('cancelled')}
-                      className="h-8 text-xs font-bold text-destructive"
-                    >
-                      CANCELADOS
-                    </Button>
-                  </div>
+          <Tabs defaultValue="orders" className="flex-1 flex flex-col min-h-0 space-y-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <TabsList className="bg-muted/50 p-1">
+                <TabsTrigger value="orders" className="gap-2 font-bold px-6">
+                  <ShoppingBag className="h-4 w-4" />
+                  Operação
+                </TabsTrigger>
+                <TabsTrigger value="products" className="gap-2 font-bold px-6">
+                  <Package className="h-4 w-4" />
+                  Produtos
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="gap-2 font-bold px-6">
+                  <BarChart3 className="h-4 w-4" />
+                  Análises
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="gap-2 font-bold px-6 text-destructive hover:text-destructive">
+                  <Settings2 className="h-4 w-4" />
+                  Sistema
+                </TabsTrigger>
+              </TabsList>
 
+              <TabsContent value="orders" className="m-0">
+                <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg">
                   <Button 
-                    variant={originFilter === null ? 'outline' : 'ghost'} 
+                    variant={viewMode === 'kanban' ? 'default' : 'ghost'} 
                     size="sm" 
-                    onClick={() => setOriginFilter(null)}
-                    className={`h-8 px-3 text-[10px] font-bold ${originFilter === null ? 'bg-primary/10 border-primary/20 text-primary' : ''}`}
+                    onClick={() => setViewMode('kanban')}
+                    className="h-8 gap-2 font-bold text-xs"
                   >
-                    TODOS
+                    <LayoutDashboard className="h-4 w-4" />
+                    KANBAN
                   </Button>
                   <Button 
-                    variant="ghost"
+                    variant={viewMode === 'table' ? 'default' : 'ghost'} 
+                    size="sm" 
+                    onClick={() => setViewMode('table')}
+                    className="h-8 gap-2 font-bold text-xs"
+                  >
+                    <List className="h-4 w-4" />
+                    HISTÓRICO
+                  </Button>
+                </div>
+              </TabsContent>
+            </div>
+
+            <TabsContent value="orders" className="flex-1 min-h-0 mt-0 focus-visible:outline-none">
+              <div className="flex flex-col h-full gap-4">
+                {/* Filters */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button 
+                    variant={originFilter === null ? 'default' : 'outline'} 
+                    size="sm" 
+                    onClick={() => setOriginFilter(null)}
+                    className={`h-8 px-4 text-[10px] font-black uppercase tracking-wider ${originFilter === null ? 'bg-primary text-white hover:bg-primary/90' : ''}`}
+                  >
+                    TODOS OS PEDIDOS
+                  </Button>
+                  <Button 
+                    variant="outline"
                     size="sm" 
                     onClick={() => setOriginFilter('whatsapp')}
-                    className={`h-8 px-3 text-[10px] font-bold gap-1 ${originFilter === 'whatsapp' ? 'bg-[#25D366]/10 text-[#25D366]' : ''}`}
+                    className={`h-8 px-4 text-[10px] font-black uppercase tracking-wider gap-2 ${originFilter === 'whatsapp' ? 'bg-[#25D366] text-white border-[#25D366]' : ''}`}
                   >
                     <MessageSquare className="h-3 w-3" /> WHATSAPP
                   </Button>
                   <Button 
-                    variant="ghost"
-                    size="sm" 
-                    onClick={() => setOriginFilter('site')}
-                    className={`h-8 px-3 text-[10px] font-bold gap-1 ${originFilter === 'site' ? 'bg-amber-500/10 text-amber-500' : ''}`}
-                  >
-                    <Globe className="h-3 w-3" /> SITE
-                  </Button>
-                  <Button 
-                    variant="ghost"
+                    variant="outline"
                     size="sm" 
                     onClick={() => setOriginFilter('balcao')}
-                    className={`h-8 px-3 text-[10px] font-bold gap-1 ${originFilter === 'balcao' ? 'bg-blue-500/10 text-blue-500' : ''}`}
+                    className={`h-8 px-4 text-[10px] font-black uppercase tracking-wider gap-2 ${originFilter === 'balcao' ? 'bg-blue-600 text-white border-blue-600' : ''}`}
                   >
-                    <Store className="h-3 w-3" /> BALCÃO
+                    <Store className="h-3 w-3" /> BALCÃO / MESA
                   </Button>
                   <Button 
-                    variant="ghost"
+                    variant="outline"
                     size="sm" 
                     onClick={() => setOriginFilter('ifood')}
-                    className={`h-8 px-3 text-[10px] font-bold gap-1 ${originFilter === 'ifood' ? 'bg-[#ea1d2c]/10 text-[#ea1d2c]' : ''}`}
+                    className={`h-8 px-4 text-[10px] font-black uppercase tracking-wider gap-2 ${originFilter === 'ifood' ? 'bg-[#ea1d2c] text-white border-[#ea1d2c]' : ''}`}
                   >
                     <ShoppingBag className="h-3 w-3" /> IFOOD
                   </Button>
+                  
+                  {viewMode === 'table' && (
+                    <div className="ml-auto flex bg-muted p-1 rounded-md">
+                      <Button 
+                        variant={statusTab === 'active' ? 'secondary' : 'ghost'} 
+                        size="sm" 
+                        onClick={() => setStatusTab('active')}
+                        className="h-7 text-[10px] font-black uppercase tracking-tight px-3"
+                      >
+                        Ativos
+                      </Button>
+                      <Button 
+                        variant={statusTab === 'cancelled' ? 'secondary' : 'ghost'} 
+                        size="sm" 
+                        onClick={() => setStatusTab('cancelled')}
+                        className="h-7 text-[10px] font-black uppercase tracking-tight px-3 text-destructive"
+                      >
+                        Cancelados
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </CardHeader>
-              <CardContent className="px-0 sm:px-6 pt-6">
-                <OrdersTable 
-                  orders={orders.filter(o => {
-                    const matchesStatus = statusTab === 'active' ? o.status !== 'cancelled' : o.status === 'cancelled';
-                    const matchesOrigin = originFilter ? o.origin === originFilter : true;
-                    return matchesStatus && matchesOrigin;
-                  })} 
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          <TabsContent value="analytics">
-            <SalesAnalytics orders={orders} />
-          </TabsContent>
+                <div className="flex-1 min-h-0">
+                  {viewMode === 'kanban' ? (
+                    <OrdersKanban 
+                      orders={orders.filter(o => {
+                        const matchesOrigin = originFilter ? o.origin === originFilter : true;
+                        return (o.status !== 'cancelled' && o.status !== 'delivered') && matchesOrigin;
+                      })} 
+                    />
+                  ) : (
+                    <Card className="h-full overflow-hidden flex flex-col">
+                      <div className="flex-1 overflow-auto">
+                        <OrdersTable 
+                          orders={orders.filter(o => {
+                            const matchesStatus = statusTab === 'active' ? o.status !== 'cancelled' : o.status === 'cancelled';
+                            const matchesOrigin = originFilter ? o.origin === originFilter : true;
+                            return matchesStatus && matchesOrigin;
+                          })} 
+                        />
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="products">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Produtos</CardTitle>
-                <Button onClick={() => setProductDialogOpen(true)} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Novo Produto
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <ProductsTable products={products} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="analytics" className="focus-visible:outline-none">
+              <div className="p-1">
+                <SalesAnalytics orders={orders} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="products" className="focus-visible:outline-none">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
+                  <CardTitle className="text-lg">Gerenciar Produtos</CardTitle>
+                  <Button onClick={() => setProductDialogOpen(true)} className="gap-2 font-bold h-9">
+                    <Plus className="h-4 w-4" />
+                    CADASTRAR PRODUTO
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ProductsTable products={products} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="settings" className="focus-visible:outline-none">
+              <Card className="border-destructive/20 bg-destructive/5">
+                <CardHeader>
+                  <CardTitle className="text-destructive flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Zona de Perigo
+                  </CardTitle>
+                  <CardDescription>
+                    Ações irreversíveis que afetam todo o sistema. Use com cautela.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between p-4 border border-destructive/20 rounded-xl bg-white/50 gap-4">
+                    <div>
+                      <h4 className="font-bold text-foreground">Reiniciar Sistema</h4>
+                      <p className="text-sm text-muted-foreground">Apaga todos os pedidos, histórico de vendas e produtos cadastrados.</p>
+                    </div>
+                    <Button 
+                      variant="destructive" 
+                      className="gap-2 font-black min-w-[200px]"
+                      onClick={handleResetSystem}
+                      disabled={isDeletingOrders || isDeletingProducts}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {isDeletingOrders || isDeletingProducts ? 'LIMPANDO...' : 'LIMPAR TUDO'}
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between p-4 border border-destructive/20 rounded-xl bg-white/50 gap-4">
+                    <div>
+                      <h4 className="font-bold text-foreground">Limpar Apenas Pedidos</h4>
+                      <p className="text-sm text-muted-foreground">Apaga apenas o histórico de pedidos e estatísticas de vendas.</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="gap-2 font-black border-destructive/50 text-destructive hover:bg-destructive/10 min-w-[200px]"
+                      onClick={() => confirm('Apagar histórico de pedidos?') && deleteAllOrders()}
+                      disabled={isDeletingOrders}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      LIMPAR PEDIDOS
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
 
       <ProductDialog 
@@ -298,3 +373,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

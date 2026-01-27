@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Upload, X, ImageIcon } from 'lucide-react';
+import { Loader2, Upload, X, ImageIcon, Tag } from 'lucide-react';
 import { storage } from '@/integrations/firebase/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts';
 import { Product } from '@/types';
 import { productSchema } from '@/lib/validators';
@@ -23,6 +30,15 @@ interface ProductDialogProps {
   onOpenChange: (open: boolean) => void;
   product?: Product | null;
 }
+
+const DEFAULT_CATEGORIES = [
+  'Lanches',
+  'Bebidas',
+  'Porções',
+  'Combos',
+  'Sobremesas',
+  'Adicionais'
+];
 
 export function ProductDialog({ open, onOpenChange, product }: ProductDialogProps) {
   const createProduct = useCreateProduct();
@@ -34,6 +50,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     description: '',
     price: '',
     image_url: '',
+    category: '',
     available: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -46,6 +63,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         description: product.description || '',
         price: product.price.toString(),
         image_url: product.image_url || '',
+        category: product.category || '',
         available: product.available,
       });
     } else {
@@ -54,6 +72,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         description: '',
         price: '',
         image_url: '',
+        category: 'Lanches',
         available: true,
       });
     }
@@ -93,6 +112,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
       description: formData.description || undefined,
       price: parseFloat(formData.price) || 0,
       image_url: formData.image_url || undefined,
+      category: formData.category,
       available: formData.available,
     };
 
@@ -124,57 +144,79 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Tag className="h-5 w-5 text-primary" />
             {isEditing ? 'Editar Produto' : 'Novo Produto'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome *</Label>
+            <Label htmlFor="name">Nome do Produto *</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Ex: X-Bacon"
-              className={errors.name ? 'border-destructive' : ''}
+              placeholder="Ex: X-Bacon Supremo"
+              className={errors.name ? 'border-destructive' : 'h-11 font-bold'}
             />
-            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+            {errors.name && <p className="text-[10px] text-destructive font-bold uppercase">{errors.name}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoria *</Label>
+              <Select 
+                value={formData.category} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+              >
+                <SelectTrigger className={errors.category ? 'border-destructive' : 'h-11 font-bold'}>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEFAULT_CATEGORIES.map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.category && <p className="text-[10px] text-destructive font-bold uppercase">{errors.category}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="price">Preço *</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.price}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                placeholder="0.00"
+                className={errors.price ? 'border-destructive' : 'h-11 font-bold'}
+              />
+              {errors.price && <p className="text-[10px] text-destructive font-bold uppercase">{errors.price}</p>}
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description">Descrição / Ingredientes</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Ex: Hambúrguer com queijo e bacon crocante"
+              placeholder="Ex: Pão brioche, blend 180g, muito bacon..."
               rows={3}
+              className="resize-none font-medium"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price">Preço *</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.price}
-              onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-              placeholder="0.00"
-              className={errors.price ? 'border-destructive' : ''}
-            />
-            {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
-          </div>
-
-          <div className="space-y-4">
-            <Label>Imagem do Produto</Label>
+            <Label>Imagem do Produto (Opcional)</Label>
             
             {formData.image_url ? (
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden border bg-muted group">
+              <div className="relative w-full aspect-video rounded-xl overflow-hidden border-2 border-muted bg-muted group">
                 <img 
                   src={formData.image_url} 
                   alt="Preview" 
@@ -184,14 +226,14 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                   type="button"
                   variant="destructive"
                   size="icon"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full h-8 w-8"
                   onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 bg-muted/30 hover:bg-muted/50 transition-colors relative">
+              <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 bg-muted/10 hover:bg-muted/20 transition-all relative group">
                 <Input
                   type="file"
                   accept="image/*"
@@ -202,26 +244,27 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                 {isUploading ? (
                   <div className="flex flex-col items-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="mt-2 text-sm text-muted-foreground font-bold">Fazendo upload...</p>
+                    <p className="mt-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest">Enviando...</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center text-center">
-                    <div className="p-3 bg-primary/10 rounded-full mb-3">
-                      <Upload className="h-6 w-6 text-primary" />
+                    <div className="p-3 bg-primary/5 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                      <Upload className="h-5 w-5 text-primary" />
                     </div>
-                    <p className="font-bold text-sm">Clique para subir a foto</p>
-                    <p className="text-xs text-muted-foreground mt-1 text-center">
-                      Formatos aceitos: JPG, PNG, WebP<br/>Tamanho recomendado: 800x600px
-                    </p>
+                    <p className="font-black text-[10px] uppercase tracking-widest mb-1">Subir Foto</p>
+                    <p className="text-[9px] text-muted-foreground">JPG, PNG, WebP</p>
                   </div>
                 )}
               </div>
             )}
-            {errors.image_url && <p className="text-sm text-destructive font-bold">{errors.image_url}</p>}
+            {errors.image_url && <p className="text-[10px] text-destructive font-bold uppercase">{errors.image_url}</p>}
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="available">Disponível para venda</Label>
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+            <div>
+              <Label htmlFor="available" className="font-bold">Disponível para venda</Label>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">O produto aparecerá no cardápio</p>
+            </div>
             <Switch
               id="available"
               checked={formData.available}
@@ -229,18 +272,18 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
             />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
+          <DialogFooter className="pt-4 gap-2">
+            <Button type="button" variant="ghost" className="font-bold flex-1" onClick={() => onOpenChange(false)}>
+              DESCARTAR
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="flex-1 font-black uppercase tracking-widest h-11">
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Salvando...
+                  GRAVANDO...
                 </>
               ) : (
-                isEditing ? 'Salvar' : 'Criar'
+                isEditing ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR PRODUTO'
               )}
             </Button>
           </DialogFooter>
@@ -249,3 +292,4 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     </Dialog>
   );
 }
+

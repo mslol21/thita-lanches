@@ -27,7 +27,7 @@ export default function CartPage() {
             Seu carrinho está vazio
           </h1>
           <p className="text-muted-foreground mb-8">
-            Adicione alguns lanches deliciosos do nosso cardápio!
+            Adicione algumas delícias do nosso cardápio!
           </p>
           <Button asChild>
             <Link to="/">Ver Cardápio</Link>

@@ -71,12 +71,13 @@ export function ProductsTable({ products }: ProductsTableProps) {
 
   return (
     <>
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="w-[80px]">Imagem</TableHead>
-              <TableHead>Nome</TableHead>
+              <TableHead>Produto / Descrição</TableHead>
+              <TableHead>Categoria</TableHead>
               <TableHead>Preço</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[50px]"></TableHead>
@@ -84,14 +85,14 @@ export function ProductsTable({ products }: ProductsTableProps) {
           </TableHeader>
           <TableBody>
             {products.map((product) => (
-              <TableRow key={product.id}>
+              <TableRow key={product.id} className="group hover:bg-muted/30">
                 <TableCell>
-                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted border border-border">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xl">
@@ -101,51 +102,64 @@ export function ProductsTable({ products }: ProductsTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div>
-                    <p className="font-medium">{product.name}</p>
+                  <div className="flex flex-col">
+                    <p className="font-bold text-base leading-none mb-1">{product.name}</p>
                     {product.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-1">
+                      <p className="text-xs text-muted-foreground line-clamp-1 max-w-[200px]">
                         {product.description}
                       </p>
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="font-medium">
+                <TableCell>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tight bg-primary/10 text-primary border border-primary/20">
+                    {product.category || 'Outros'}
+                  </span>
+                </TableCell>
+                <TableCell className="font-black text-sm">
                   {formatPrice(product.price)}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={product.available ? 'default' : 'secondary'}>
-                    {product.available ? 'Disponível' : 'Indisponível'}
-                  </Badge>
+                  <div 
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase cursor-pointer select-none transition-colors ${
+                      product.available 
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                        : 'bg-red-100 text-red-700 hover:bg-red-200'
+                    }`}
+                    onClick={() => toggleAvailability(product)}
+                  >
+                    <div className={`h-1.5 w-1.5 rounded-full ${product.available ? 'bg-green-600' : 'bg-red-600'}`} />
+                    {product.available ? 'Visível' : 'Oculto'}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setSelectedProduct(product)}>
+                      <DropdownMenuItem onClick={() => setSelectedProduct(product)} className="font-bold">
                         <Pencil className="h-4 w-4 mr-2" />
                         Editar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toggleAvailability(product)}>
+                      <DropdownMenuItem onClick={() => toggleAvailability(product)} className="font-bold">
                         {product.available ? (
                           <>
                             <EyeOff className="h-4 w-4 mr-2" />
-                            Marcar indisponível
+                            Ocultar no site
                           </>
                         ) : (
                           <>
                             <Eye className="h-4 w-4 mr-2" />
-                            Marcar disponível
+                            Mostrar no site
                           </>
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => setDeleteProduct(product)}
-                        className="text-destructive"
+                        className="text-destructive font-bold"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Excluir

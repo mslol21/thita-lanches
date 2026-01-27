@@ -10,17 +10,17 @@ export function CustomerLayout() {
       </main>
       <footer className="py-6 border-t border-border bg-card">
         <div className="container mx-auto px-4 text-center text-muted-foreground text-sm space-y-2">
-          <p className="font-semibold text-foreground">Thita Lanches - Desde 2015</p>
+          <p className="font-semibold text-foreground">Talita Pinha - Bolos e Doces Artesanais</p>
           <div className="flex justify-center gap-4">
-            <a href="https://instagram.com/thita.lanches" target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">
-              @thita.lanches
+            <a href="https://instagram.com/talitapinhabolosedoces" target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">
+              @talitapinhabolosedoces
             </a>
             <span>•</span>
-            <a href="https://wa.me/5516997977939" target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">
-              (16) 99797-7939
-            </a>
+            <span className="hover:text-primary transition-colors">
+              Ribeirão Preto - SP
+            </span>
           </div>
-          <p className="mt-4 opacity-70">© 2026 Thita Lanches. Todos os direitos reservados.</p>
+          <p className="mt-4 opacity-70">© 2026 Talita Pinha. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

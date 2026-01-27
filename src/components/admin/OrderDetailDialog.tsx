@@ -5,11 +5,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
-import { OrderTimeline } from '@/components/orders/OrderTimeline';
 import { useOrder } from '@/hooks/useOrders';
 import { Order } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquare, Globe, Store, ShoppingBag } from 'lucide-react';
+import { MessageSquare, Globe, Store, ShoppingBag, MapPin, Phone, Clock, FileText, Printer } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface OrderDetailDialogProps {
   order: Order | null;
@@ -31,96 +32,129 @@ export function OrderDetailDialog({ order, open, onOpenChange }: OrderDetailDial
     return new Date(dateString).toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
   };
 
+  const handlePrint = () => {
+    toast.info("Iniciando impressão...");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Pedido #{order?.id.slice(0, 8)}</span>
-            {order && <OrderStatusBadge status={order.status} />}
-          </DialogTitle>
-        </DialogHeader>
-
+      <DialogContent className="max-w-xl max-h-[95vh] overflow-y-auto p-0 border-none shadow-2xl">
         {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-20 w-full" />
+          <div className="p-8 space-y-4">
+            <Skeleton className="h-8 w-1/2" />
+            <Skeleton className="h-32 w-full" />
             <Skeleton className="h-40 w-full" />
           </div>
         ) : orderDetails ? (
-          <div className="space-y-6">
-            {/* Timeline */}
-            <OrderTimeline currentStatus={orderDetails.status} />
-
-            {/* Customer Info */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Cliente</h4>
-                <p className="font-medium">{orderDetails.customer_name}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Telefone</h4>
-                <p className="font-medium">{orderDetails.customer_phone}</p>
-              </div>
-              <div className="sm:col-span-2">
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Endereço</h4>
-                <p className="font-medium">{orderDetails.customer_address}</p>
-              </div>
-              {orderDetails.observations && (
-                <div className="sm:col-span-2">
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Observações</h4>
-                  <p className="font-medium">{orderDetails.observations}</p>
+          <div className="flex flex-col">
+            {/* Header / Banner */}
+            <div className="bg-primary p-6 text-primary-foreground">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest opacity-80">Pedido Realizado em {formatDate(orderDetails.created_at)}</h3>
+                  <DialogTitle className="text-3xl font-black mt-1">#{orderDetails.id.slice(0, 8).toUpperCase()}</DialogTitle>
                 </div>
-              )}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Data do pedido</h4>
-                <p className="font-medium">{formatDate(orderDetails.created_at)}</p>
+                <OrderStatusBadge status={orderDetails.status} className="bg-white text-primary border-none" />
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Origem</h4>
-                <div className="flex items-center gap-2 font-bold uppercase text-xs">
+              
+              <div className="flex flex-wrap gap-4 mt-6">
+                <div className="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
                   {orderDetails.origin === 'whatsapp' ? (
-                    <><MessageSquare className="h-4 w-4 text-[#25D366]" /> WhatsApp</>
+                    <><MessageSquare className="h-4 w-4" /> <span className="text-[10px] font-black uppercase">WhatsApp</span></>
                   ) : orderDetails.origin === 'balcao' ? (
-                    <><Store className="h-4 w-4 text-blue-500" /> Balcão</>
+                    <><Store className="h-4 w-4" /> <span className="text-[10px] font-black uppercase">Balcão / Local</span></>
                   ) : orderDetails.origin === 'ifood' ? (
-                    <><ShoppingBag className="h-4 w-4 text-[#ea1d2c]" /> iFood</>
+                    <><ShoppingBag className="h-4 w-4" /> <span className="text-[10px] font-black uppercase">iFood</span></>
                   ) : (
-                    <><Globe className="h-4 w-4 text-amber-500" /> Site</>
+                    <><Globe className="h-4 w-4" /> <span className="text-[10px] font-black uppercase">Site</span></>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Items */}
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-3">Itens</h4>
-              <div className="border rounded-lg divide-y">
-                {orderDetails.items?.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-3">
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium">{item.quantity}x</span>
-                      <span>{item.product?.name || 'Produto'}</span>
+            <div className="p-6 space-y-8">
+              {/* Customer & Delivery */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-muted rounded-lg shrink-0">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <span className="font-medium">
-                      {formatPrice(item.price * item.quantity)}
-                    </span>
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Cliente</h4>
+                      <p className="font-bold text-lg">{orderDetails.customer_name}</p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                  
+                  {orderDetails.customer_phone && (
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-muted rounded-lg shrink-0">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Contato</h4>
+                        <p className="font-bold">{orderDetails.customer_phone}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-            {/* Total */}
-            <div className="flex items-center justify-between pt-4 border-t">
-              <span className="text-lg font-semibold">Total</span>
-              <span className="text-2xl font-bold text-primary">
-                {formatPrice(orderDetails.total_price)}
-              </span>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-muted rounded-lg shrink-0">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Destino / Local</h4>
+                      <p className="font-bold">{orderDetails.customer_address}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b pb-2">Conteúdo do Pedido</h4>
+                <div className="space-y-2">
+                  {orderDetails.items?.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between py-3 px-4 bg-muted/30 rounded-xl">
+                      <div className="flex items-center gap-4">
+                        <span className="flex items-center justify-center h-8 w-8 bg-black text-white rounded-full text-xs font-black">{item.quantity}</span>
+                        <span className="font-bold uppercase text-sm">{item.product?.name || 'Produto'}</span>
+                      </div>
+                      <span className="font-black text-sm">
+                        {formatPrice(item.price * item.quantity)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="bg-muted px-6 py-4 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Líquido</p>
+                  <p className="text-4xl font-black text-primary leading-none mt-1">{formatPrice(orderDetails.total_price)}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <Button onClick={handlePrint} className="gap-2 font-black uppercase text-[10px] tracking-widest h-12 px-6 shadow-lg shadow-primary/20">
+                    <Printer className="h-4 w-4" />
+                    Imprimir Ticket
+                  </Button>
+                </div>
+              </div>
+
+              {orderDetails.observations && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-amber-700 mb-1">Observações do Cliente:</h4>
+                  <p className="text-sm font-medium text-amber-900">{orderDetails.observations}</p>
+                </div>
+              )}
             </div>
           </div>
         ) : null}
@@ -128,3 +162,4 @@ export function OrderDetailDialog({ order, open, onOpenChange }: OrderDetailDial
     </Dialog>
   );
 }
+

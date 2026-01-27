@@ -159,7 +159,7 @@ export default function OrderTrackingPage() {
           <Button 
             className="bg-[#25D366] hover:bg-[#128C7E] text-white gap-2 font-bold px-8"
             onClick={() => {
-              const message = `Olá! Acabei de fazer um pedido na Thita Lanches!\n\n*Código:* ${order.id.slice(0, 8)}\n*Cliente:* ${order.customer_name}\n*Total:* ${formatCurrency(order.total_price)}\n\n*Status:* ${order.status === 'pending' ? 'Aguardando confirmação' : 'Acompanhando'}\n\nVeja meu pedido aqui: ${window.location.href}`;
+              const message = `Olá! Acabei de fazer um pedido na Talita Pinha Bolos e Doces!\n\n*Código:* ${order.id.slice(0, 8)}\n*Cliente:* ${order.customer_name}\n*Total:* ${formatCurrency(order.total_price)}\n\n*Status:* ${order.status === 'pending' ? 'Aguardando confirmação' : 'Acompanhando'}\n\nVeja meu pedido aqui: ${window.location.href}`;
               window.open(`https://wa.me/5516997977939?text=${encodeURIComponent(message)}`, '_blank');
             }}
           >

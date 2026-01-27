@@ -14,7 +14,8 @@ export const productSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
   description: z.string().max(500).optional(),
   price: z.number().min(0.01, 'Preço deve ser maior que zero'),
-  image_url: z.string().url('URL da imagem inválida').optional().or(z.literal('')),
+  image_url: z.string().url('URL da imagem inválida').optional().nullable().or(z.literal('')),
+  category: z.string().min(2, 'Categoria é obrigatória'),
   available: z.boolean().default(true),
 });
 
