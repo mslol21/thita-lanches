@@ -239,15 +239,15 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                       </Button>
                     )}
                   </div>
-                  {categories.length > 0 ? (
-                    categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                    ))
-                  ) : (
-                    DEFAULT_CATEGORIES.map(cat => (
+                  {(() => {
+                    const allCategories = Array.from(new Set([
+                      ...DEFAULT_CATEGORIES,
+                      ...categories.map(c => c.name)
+                    ]));
+                    return allCategories.map(cat => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))
-                  )}
+                    ));
+                  })()}
                 </SelectContent>
               </Select>
               {errors.category && <p className="text-[10px] text-destructive font-bold uppercase">{errors.category}</p>}

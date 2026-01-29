@@ -66,4 +66,5 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   preparing: 'bg-status-preparing',
   out_for_delivery: 'bg-status-out-for-delivery',
   delivered: 'bg-status-delivered',
+  cancelled: 'bg-status-cancelled',
 };

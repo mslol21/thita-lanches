@@ -58,6 +58,7 @@
     --status-preparing: 328 60% 70%;
     --status-out-for-delivery: 195 70% 60%;
     --status-delivered: 142 40% 45%;
+    --status-cancelled: 0 0% 45%;
   }
 
 

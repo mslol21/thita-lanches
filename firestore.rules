@@ -45,7 +45,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // 4. Papéis de Usuário:
+    // 4. Categorias: Público pode ler, apenas Admin altera
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 5. Papéis de Usuário:
     // - Segurança máxima: Apenas o sistema ou o próprio usuário lê (Admin gerencia no console)
     match /user_roles/{userId} {
       allow read: if isOwner(userId) || isAdmin();

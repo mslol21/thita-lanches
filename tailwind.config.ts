@@ -75,6 +75,7 @@ export default {
           preparing: "hsl(var(--status-preparing))",
           "out-for-delivery": "hsl(var(--status-out-for-delivery))",
           delivered: "hsl(var(--status-delivered))",
+          cancelled: "hsl(var(--status-cancelled))",
         },
       },
       borderRadius: {
