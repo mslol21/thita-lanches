@@ -30,6 +30,7 @@ import { useProducts, useDeleteAllProducts } from '@/hooks/useProducts';
 import { OrdersTable } from '@/components/admin/OrdersTable';
 import { OrdersKanban } from '@/components/admin/OrdersKanban';
 import { ProductsTable } from '@/components/admin/ProductsTable';
+import { CategoriesTable } from '@/components/admin/CategoriesTable';
 import { ProductDialog } from '@/components/admin/ProductDialog';
 import { ManualOrderDialog } from '@/components/admin/ManualOrderDialog';
 import { SalesAnalytics } from '@/components/admin/SalesAnalytics';
@@ -110,27 +111,28 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <span className="font-display font-black text-xl text-primary uppercase tracking-tighter">
+              <span className="font-display font-black text-lg sm:text-xl text-primary uppercase tracking-tighter">
                 TALITA PINHA<span className="text-accent italic ml-1">ADMIN</span>
               </span>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Button 
                 onClick={() => setManualOrderDialogOpen(true)}
-                className="bg-primary text-white hover:bg-primary/90 gap-2 font-black h-10 px-6 rounded-full shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="bg-primary text-white hover:bg-primary/90 gap-2 font-black h-9 sm:h-10 px-3 sm:px-6 rounded-full shadow-lg shadow-primary/20 transition-all active:scale-95 text-[10px] sm:text-sm"
               >
-                <Plus className="h-5 w-5" />
-                NOVO PEDIDO (BALCÃO)
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden xs:inline">NOVO PEDIDO</span>
+                <span className="xs:hidden">NOVO</span>
               </Button>
-              <Button variant="ghost" size="sm" asChild className="text-sidebar-foreground/70 hover:text-white hidden sm:flex">
+              <Button variant="ghost" size="sm" asChild className="text-sidebar-foreground/70 hover:text-white hidden md:flex">
                 <Link to="/" target="_blank">Ver Cardápio</Link>
               </Button>
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={logout}
-                className="text-sidebar-foreground/70 hover:text-destructive transition-colors ml-2"
+                className="text-sidebar-foreground/70 hover:text-destructive transition-colors"
                 title="Sair"
               >
                 <LogOut className="h-5 w-5" />
@@ -170,6 +172,10 @@ export default function AdminDashboard() {
                 <TabsTrigger value="products" className="gap-2 font-bold px-6">
                   <Package className="h-4 w-4" />
                   Produtos
+                </TabsTrigger>
+                <TabsTrigger value="categories" className="gap-2 font-bold px-6">
+                  <List className="h-4 w-4" />
+                  Categorias
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="gap-2 font-bold px-6">
                   <BarChart3 className="h-4 w-4" />
@@ -306,6 +312,17 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent className="p-0">
                   <ProductsTable products={products} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="categories" className="focus-visible:outline-none">
+              <Card>
+                <CardHeader className="border-b px-6 py-4">
+                  <CardTitle className="text-lg">Gerenciar Categorias</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <CategoriesTable />
                 </CardContent>
               </Card>
             </TabsContent>

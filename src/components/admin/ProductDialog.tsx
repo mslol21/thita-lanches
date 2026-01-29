@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Upload, X, ImageIcon, Tag } from 'lucide-react';
+import { Loader2, Upload, X, ImageIcon, Tag, Plus } from 'lucide-react';
 import { storage } from '@/integrations/firebase/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts';
+import { useCategories, useCreateCategory } from '@/hooks/useCategories';
 import { Product } from '@/types';
 import { productSchema } from '@/lib/validators';
 
@@ -43,6 +44,10 @@ const DEFAULT_CATEGORIES = [
 export function ProductDialog({ open, onOpenChange, product }: ProductDialogProps) {
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
+  const { data: categories = [] } = useCategories();
+  const createCategory = useCreateCategory();
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
   const isEditing = !!product;
 
   const [formData, setFormData] = useState({
@@ -176,9 +181,73 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DEFAULT_CATEGORIES.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
+                  <div className="p-2 border-b">
+                    {showAddCategory ? (
+                      <div className="flex gap-2">
+                        <Input 
+                          size={1}
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          placeholder="Nova categoria..."
+                          className="h-8 text-xs"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (newCategoryName.trim()) {
+                                createCategory.mutate(newCategoryName.trim());
+                                setFormData(prev => ({ ...prev, category: newCategoryName.trim() }));
+                                setNewCategoryName('');
+                                setShowAddCategory(false);
+                              }
+                            }
+                          }}
+                        />
+                        <Button 
+                          type="button"
+                          size="sm"
+                          className="h-8 px-2"
+                          onClick={() => {
+                            if (newCategoryName.trim()) {
+                              createCategory.mutate(newCategoryName.trim());
+                              setFormData(prev => ({ ...prev, category: newCategoryName.trim() }));
+                              setNewCategoryName('');
+                              setShowAddCategory(false);
+                            }
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2"
+                          onClick={() => setShowAddCategory(false)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        className="w-full justify-start h-8 text-xs gap-2 font-bold text-primary"
+                        onClick={() => setShowAddCategory(true)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        NOVA CATEGORIA
+                      </Button>
+                    )}
+                  </div>
+                  {categories.length > 0 ? (
+                    categories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                    ))
+                  ) : (
+                    DEFAULT_CATEGORIES.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               {errors.category && <p className="text-[10px] text-destructive font-bold uppercase">{errors.category}</p>}

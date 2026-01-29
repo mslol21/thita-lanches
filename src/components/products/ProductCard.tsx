@@ -33,29 +33,46 @@ export function ProductCard({ product }: ProductCardProps) {
       className="group overflow-hidden border border-muted/50 rounded-2xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 bg-white cursor-pointer active:scale-[0.98]"
       onClick={() => {/* To be used for opening details modal */}}
     >
-      <div className="flex items-center justify-between p-5 gap-4">
-        <div className="flex-1 space-y-1">
-          <h3 className="font-bold text-lg text-foreground tracking-tight group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
+      <div className="flex items-center p-3 sm:p-5 gap-3 sm:gap-4">
+        {/* Product Image */}
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-muted flex-shrink-0 border border-muted/50">
+          {product.image_url ? (
+            <img 
+              src={product.image_url} 
+              alt={product.name} 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-3xl">
+              🍰
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+          <div className="flex justify-between items-start gap-2">
+            <h3 className="font-bold text-base sm:text-lg text-foreground tracking-tight group-hover:text-primary transition-colors truncate">
+              {product.name}
+            </h3>
+          </div>
           {product.description && (
-            <p className="text-muted-foreground text-sm font-medium line-clamp-2 leading-snug pr-4">
+            <p className="text-muted-foreground text-xs sm:text-sm font-medium line-clamp-2 leading-snug">
               {product.description}
             </p>
           )}
-          <div className="pt-1">
-            <span className="font-black text-lg text-primary">
+          <div className="flex items-center justify-between pt-1">
+            <span className="font-black text-base sm:text-lg text-primary">
               {formatPrice(product.price)}
             </span>
+            
+            <button 
+              onClick={handleAddToCart}
+              className="h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-110 transition-all active:scale-90"
+            >
+              <Plus className="h-5 w-5 sm:h-6 sm:w-6 stroke-[3]" />
+            </button>
           </div>
         </div>
-
-        <button 
-          onClick={handleAddToCart}
-          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm active:scale-90 flex-shrink-0"
-        >
-          <Plus className="h-6 w-6 stroke-[3]" />
-        </button>
       </div>
     </Card>
   );

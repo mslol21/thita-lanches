@@ -12,16 +12,19 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Status */}
-          <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="font-display font-black text-xl text-primary uppercase tracking-tighter">
-                TALITA PINHA<span className="text-accent italic ml-1">Bolos & Doces</span>
+          <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
+            <Link to="/" className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2 min-w-0">
+              <span className="font-display font-black text-lg sm:text-xl text-primary uppercase tracking-tighter truncate">
+                TALITA PINHA
+              </span>
+              <span className="text-accent italic text-[10px] sm:text-sm whitespace-nowrap -mt-1 sm:mt-0">
+                Bolos & Doces
               </span>
             </Link>
             
-            <div className="flex items-center gap-1.5 ml-2 px-2.5 py-1 bg-green-500/10 rounded-full border border-green-500/20">
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase text-green-600 tracking-wider">Aberto</span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-green-500/10 rounded-full border border-green-500/20 flex-shrink-0">
+              <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[8px] sm:text-[10px] font-black uppercase text-green-600 tracking-wider">Aberto</span>
             </div>
           </div>
 

@@ -10,6 +10,12 @@ export interface Product {
   updated_at: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  created_at?: string;
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;
