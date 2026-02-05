@@ -114,9 +114,9 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     
     const data = {
       name: formData.name,
-      description: formData.description || undefined,
+      description: formData.description || null,
       price: parseFloat(formData.price) || 0,
-      image_url: formData.image_url || undefined,
+      image_url: formData.image_url || null,
       category: formData.category,
       available: formData.available,
     };

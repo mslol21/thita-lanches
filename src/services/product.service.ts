@@ -33,8 +33,14 @@ export const productService = {
 
   async createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
     const productsCol = collection(db, "products");
+    
+    // Filter out undefined values and convert them to null for Firestore compatibility
+    const productData = Object.fromEntries(
+      Object.entries(product).map(([key, value]) => [key, value === undefined ? null : value])
+    );
+    
     const docRef = await addDoc(productsCol, {
-      ...product,
+      ...productData,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp()
     });
@@ -42,6 +48,7 @@ export const productService = {
     return {
       id: docRef.id,
       ...product,
+      image_url: product.image_url ?? null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     } as Product;
@@ -49,8 +56,14 @@ export const productService = {
 
   async updateProduct(id: string, product: Partial<Product>): Promise<Product> {
     const docRef = doc(db, "products", id);
+    
+    // Filter out undefined values and convert them to null for Firestore compatibility
+    const productData = Object.fromEntries(
+      Object.entries(product).map(([key, value]) => [key, value === undefined ? null : value])
+    );
+    
     await updateDoc(docRef, {
-      ...product,
+      ...productData,
       updated_at: serverTimestamp()
     });
 
