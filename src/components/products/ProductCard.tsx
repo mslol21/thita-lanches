@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Product } from '@/types';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
+import { getProductIcon } from '@/lib/product-icons';
 
 interface ProductCardProps {
   product: Product;
@@ -42,6 +43,17 @@ export function ProductCard({ product }: ProductCardProps) {
               alt={product.name} 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
+          ) : product.icon ? (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-colors">
+              {(() => {
+                const IconComponent = getProductIcon(product.icon);
+                return IconComponent ? (
+                  <IconComponent className="h-10 w-10 sm:h-12 sm:w-12 text-primary group-hover:scale-110 transition-transform" />
+                ) : (
+                  <div className="text-3xl">🍰</div>
+                );
+              })()}
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-3xl">
               🍰

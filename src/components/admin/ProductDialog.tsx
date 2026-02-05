@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Upload, X, ImageIcon, Tag, Plus } from 'lucide-react';
+import { Loader2, Upload, X, ImageIcon, Tag, Plus, Sparkles } from 'lucide-react';
+import { PRODUCT_ICONS, getProductIcon } from '@/lib/product-icons';
 import { storage } from '@/integrations/firebase/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     description: '',
     price: '',
     image_url: '',
+    icon: '',
     category: '',
     available: true,
   });
@@ -68,6 +70,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         description: product.description || '',
         price: product.price.toString(),
         image_url: product.image_url || '',
+        icon: product.icon || '',
         category: product.category || '',
         available: product.available,
       });
@@ -77,6 +80,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         description: '',
         price: '',
         image_url: '',
+        icon: '',
         category: 'Lanches',
         available: true,
       });
@@ -117,6 +121,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
       description: formData.description || null,
       price: parseFloat(formData.price) || 0,
       image_url: formData.image_url || null,
+      icon: formData.icon || null,
       category: formData.category,
       available: formData.available,
     };
@@ -279,6 +284,60 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
               rows={3}
               className="resize-none font-medium"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Ícone do Produto (Opcional)
+            </Label>
+            <div className="grid grid-cols-6 gap-2 p-3 bg-muted/20 rounded-xl max-h-[200px] overflow-y-auto">
+              {PRODUCT_ICONS.map((iconItem) => {
+                const IconComponent = iconItem.icon;
+                const isSelected = formData.icon === iconItem.name;
+                return (
+                  <button
+                    key={iconItem.name}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, icon: iconItem.name }))}
+                    className={`
+                      relative p-3 rounded-lg border-2 transition-all
+                      hover:scale-110 hover:shadow-md
+                      ${isSelected 
+                        ? 'border-primary bg-primary/10 shadow-lg' 
+                        : 'border-muted hover:border-primary/50 bg-background'
+                      }
+                    `}
+                    title={iconItem.label}
+                  >
+                    <IconComponent className={`h-5 w-5 mx-auto ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                    {isSelected && (
+                      <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-background" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {formData.icon && (
+              <div className="flex items-center gap-2 p-2 bg-primary/5 rounded-lg">
+                {(() => {
+                  const IconComponent = getProductIcon(formData.icon);
+                  return IconComponent ? <IconComponent className="h-4 w-4 text-primary" /> : null;
+                })()}
+                <span className="text-xs font-bold text-primary">
+                  {PRODUCT_ICONS.find(i => i.name === formData.icon)?.label}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-6 px-2"
+                  onClick={() => setFormData(prev => ({ ...prev, icon: '' }))}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
