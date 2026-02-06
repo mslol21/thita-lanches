@@ -16,10 +16,12 @@ import {
   Store,
   LayoutDashboard,
   List,
-  Settings2,
-  AlertTriangle,
-  Trash2
+  Trash2,
+  MapPin,
+  Settings
 } from 'lucide-react';
+import { NeighborhoodsTable } from '@/components/admin/NeighborhoodsTable';
+import { SettingsPanel } from '@/components/admin/SettingsPanel';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -177,12 +179,20 @@ export default function AdminDashboard() {
                   <List className="h-4 w-4" />
                   Categorias
                 </TabsTrigger>
+                <TabsTrigger value="neighborhoods" className="gap-2 font-bold px-6">
+                  <MapPin className="h-4 w-4" />
+                  Bairros
+                </TabsTrigger>
                 <TabsTrigger value="analytics" className="gap-2 font-bold px-6">
                   <BarChart3 className="h-4 w-4" />
                   Análises
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="gap-2 font-bold px-6 text-destructive hover:text-destructive">
-                  <Settings2 className="h-4 w-4" />
+                <TabsTrigger value="settings" className="gap-2 font-bold px-6">
+                  <Settings className="h-4 w-4" />
+                  Configurações
+                </TabsTrigger>
+                <TabsTrigger value="system" className="gap-2 font-bold px-6 text-destructive hover:text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
                   Sistema
                 </TabsTrigger>
               </TabsList>
@@ -226,10 +236,10 @@ export default function AdminDashboard() {
                   <Button 
                     variant="outline"
                     size="sm" 
-                    onClick={() => setOriginFilter('whatsapp')}
-                    className={`h-8 px-4 text-[10px] font-black uppercase tracking-wider gap-2 ${originFilter === 'whatsapp' ? 'bg-[#25D366] text-white border-[#25D366]' : ''}`}
+                    onClick={() => setOriginFilter('site')}
+                    className={`h-8 px-4 text-[10px] font-black uppercase tracking-wider gap-2 ${originFilter === 'site' ? 'bg-primary text-white border-primary' : ''}`}
                   >
-                    <MessageSquare className="h-3 w-3" /> WHATSAPP
+                    <Globe className="h-3 w-3" /> SITE
                   </Button>
                   <Button 
                     variant="outline"
@@ -237,15 +247,7 @@ export default function AdminDashboard() {
                     onClick={() => setOriginFilter('balcao')}
                     className={`h-8 px-4 text-[10px] font-black uppercase tracking-wider gap-2 ${originFilter === 'balcao' ? 'bg-blue-600 text-white border-blue-600' : ''}`}
                   >
-                    <Store className="h-3 w-3" /> BALCÃO / MESA
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    size="sm" 
-                    onClick={() => setOriginFilter('ifood')}
-                    className={`h-8 px-4 text-[10px] font-black uppercase tracking-wider gap-2 ${originFilter === 'ifood' ? 'bg-[#ea1d2c] text-white border-[#ea1d2c]' : ''}`}
-                  >
-                    <ShoppingBag className="h-3 w-3" /> IFOOD
+                    <Store className="h-3 w-3" /> BALCÃO
                   </Button>
                   
                   {viewMode === 'table' && (
@@ -327,7 +329,29 @@ export default function AdminDashboard() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="neighborhoods" className="focus-visible:outline-none">
+              <Card>
+                <CardHeader className="border-b px-6 py-4">
+                  <CardTitle className="text-lg">Gerenciar Bairros e Taxas</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <NeighborhoodsTable />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="settings" className="focus-visible:outline-none">
+              <Card>
+                <CardHeader className="border-b px-6 py-4">
+                  <CardTitle className="text-lg">Configurações Gerais</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <SettingsPanel />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="system" className="focus-visible:outline-none">
               <Card className="border-destructive/20 bg-destructive/5">
                 <CardHeader>
                   <CardTitle className="text-destructive flex items-center gap-2">
