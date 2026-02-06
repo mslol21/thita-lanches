@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, CreditCard, Banknote, QrCode } from 'lucide-react';
+import { ArrowLeft, Loader2, CreditCard, Banknote, QrCode, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,20 @@ import { useCreateOrder } from '@/hooks/useOrders';
 import { checkoutSchema } from '@/lib/validators';
 import { formatCurrency } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Generate time slots from 8:00 to 20:00 in 30-minute intervals
+const generateTimeSlots = () => {
+  const slots = [];
+  for (let hour = 8; hour <= 20; hour++) {
+    for (let minute of [0, 30]) {
+      if (hour === 20 && minute === 30) break; // Stop at 20:00
+      const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      slots.push(time);
+    }
+  }
+  return slots;
+};
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -19,11 +33,13 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_phone: '',
-    customer_address: '',
+    scheduled_time: '',
     observations: '',
     payment_method: '' as any,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const timeSlots = generateTimeSlots();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -52,7 +68,24 @@ export default function CheckoutPage() {
       const order = await createOrder.mutateAsync({
         ...formData,
         items,
+        delivery_method: 'retirada',
       });
+      
+      // Send WhatsApp message
+      const message = encodeURIComponent(
+        `🎂 *Novo Pedido - Talita Pinha*\n\n` +
+        `*Nome:* ${formData.customer_name}\n` +
+        `*Horário de Retirada:* ${formData.scheduled_time}\n` +
+        `*Pagamento:* ${formData.payment_method.toUpperCase()}\n\n` +
+        `*Itens:*\n${items.map(item => `• ${item.quantity}x ${item.product.name}`).join('\n')}\n\n` +
+        `*Total:* ${formatCurrency(totalPrice)}\n\n` +
+        (formData.observations ? `*Observações:* ${formData.observations}\n\n` : '') +
+        `Pedido #${order.id}`
+      );
+      
+      // Open WhatsApp (configured via environment variable)
+      const businessPhone = import.meta.env.VITE_BUSINESS_WHATSAPP || '5598991234567';
+      window.open(`https://wa.me/${businessPhone}?text=${message}`, '_blank');
       
       clearCart();
       navigate(`/pedido/${order.id}`);
@@ -67,7 +100,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-pink-50 min-h-screen">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="icon" asChild>
@@ -101,7 +134,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="customer_phone">Telefone *</Label>
+                <Label htmlFor="customer_phone">WhatsApp *</Label>
                 <Input
                   id="customer_phone"
                   name="customer_phone"
@@ -116,18 +149,32 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="customer_address">Endereço de entrega *</Label>
-                <Textarea
-                  id="customer_address"
-                  name="customer_address"
-                  value={formData.customer_address}
-                  onChange={handleChange}
-                  placeholder="Rua, número, bairro, complemento..."
-                  rows={3}
-                  className={errors.customer_address ? 'border-destructive' : ''}
-                />
-                {errors.customer_address && (
-                  <p className="text-sm text-destructive">{errors.customer_address}</p>
+                <Label htmlFor="scheduled_time" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Horário para Retirada *
+                </Label>
+                <Select 
+                  value={formData.scheduled_time} 
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, scheduled_time: value }));
+                    if (errors.scheduled_time) {
+                      setErrors(prev => ({ ...prev, scheduled_time: '' }));
+                    }
+                  }}
+                >
+                  <SelectTrigger className={errors.scheduled_time ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Selecione o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map(time => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.scheduled_time && (
+                  <p className="text-sm text-destructive">{errors.scheduled_time}</p>
                 )}
               </div>
 
@@ -138,7 +185,7 @@ export default function CheckoutPage() {
                   name="observations"
                   value={formData.observations}
                   onChange={handleChange}
-                  placeholder="Sem cebola, ponto da carne, etc..."
+                  placeholder="Alguma observação sobre o pedido?"
                   rows={2}
                 />
               </div>
@@ -190,6 +237,12 @@ export default function CheckoutPage() {
               {errors.payment_method && (
                 <p className="text-sm text-destructive font-bold">{errors.payment_method}</p>
               )}
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-800 font-medium">
+                ⏰ <strong>Pedido para Retirada:</strong> Seu pedido estará pronto no horário selecionado. Aguarde a confirmação via WhatsApp.
+              </p>
             </div>
 
             <Button 

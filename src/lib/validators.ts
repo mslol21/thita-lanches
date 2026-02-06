@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export const checkoutSchema = z.object({
   customer_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
-  customer_phone: z.string().min(10, 'Telefone inválido').max(20),
-  customer_address: z.string().min(10, 'Endereço muito curto').max(500),
+  customer_phone: z.string().min(10, 'WhatsApp inválido').max(20),
+  scheduled_time: z.string().min(1, 'Selecione um horário para retirada'),
   observations: z.string().max(500).optional(),
   payment_method: z.enum(['cartao', 'dinheiro', 'pix'], {
     required_error: 'Selecione uma forma de pagamento',
