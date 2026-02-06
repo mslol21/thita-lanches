@@ -47,7 +47,7 @@ export default function MenuPage() {
   }
 
   return (
-    <div className="bg-background min-h-screen pb-32">
+    <div className="bg-pink-50 min-h-screen pb-32">
       {/* Header Estilo App */}
       <header className="sticky top-[64px] z-40 bg-background/80 backdrop-blur-md border-b border-primary/5">
         <div className="container mx-auto px-4 py-3 sm:py-4">
@@ -91,17 +91,6 @@ export default function MenuPage() {
       </header>
 
       <main className="container mx-auto px-4 py-6 sm:py-8">
-        {/* Logo Section */}
-        <section className="flex justify-center items-center mb-8 sm:mb-12">
-          <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80">
-            <img 
-              src="/logo.png" 
-              alt="Talita Pinha - Bolos e Doces" 
-              className="w-full h-full object-contain drop-shadow-xl"
-            />
-          </div>
-        </section>
-
         <div className="mb-4 sm:mb-6">
           <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-foreground/80 flex items-center gap-2">
             {activeCategory}

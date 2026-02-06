@@ -13,13 +13,12 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo & Status */}
           <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
-            <Link to="/" className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2 min-w-0">
-              <span className="font-display font-black text-lg sm:text-xl text-primary uppercase tracking-tighter truncate">
-                TALITA PINHA
-              </span>
-              <span className="text-accent italic text-[10px] sm:text-sm whitespace-nowrap -mt-1 sm:mt-0">
-                Bolos & Doces
-              </span>
+            <Link to="/" className="flex items-center min-w-0">
+              <img 
+                src="/logo.png" 
+                alt="Talita Pinha - Bolos e Doces" 
+                className="h-12 w-12 sm:h-14 sm:w-14 object-contain"
+              />
             </Link>
             
             <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-green-500/10 rounded-full border border-green-500/20 flex-shrink-0">
