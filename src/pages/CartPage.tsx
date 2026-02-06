@@ -65,10 +65,6 @@ export default function CartPage() {
             <span className="text-muted-foreground">Subtotal</span>
             <span className="font-medium">{formatPrice(totalPrice)}</span>
           </div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-muted-foreground">Taxa de entrega</span>
-            <span className="text-success font-medium">Grátis</span>
-          </div>
           <Separator className="my-4" />
           <div className="flex items-center justify-between mb-6">
             <span className="text-lg font-semibold">Total</span>
