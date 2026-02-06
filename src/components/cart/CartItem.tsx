@@ -2,6 +2,7 @@ import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItem as CartItemType } from '@/types';
 import { useCart } from '@/contexts/CartContext';
+import { getProductIcon } from '@/lib/product-icons';
 
 interface CartItemProps {
   item: CartItemType;
@@ -20,17 +21,22 @@ export function CartItem({ item }: CartItemProps) {
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 py-4 border-b border-border last:border-0">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0 mx-auto sm:mx-0">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0 mx-auto sm:mx-0 flex items-center justify-center">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
             className="w-full h-full object-cover"
           />
+        ) : product.icon ? (
+          (() => {
+            const Icon = getProductIcon(product.icon);
+            return Icon ? <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-primary" /> : <span className="text-3xl">🍔</span>;
+          })()
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-3xl">
+          <span className="text-3xl">
             🍔
-          </div>
+          </span>
         )}
       </div>
       <div className="flex-1 min-w-0">
