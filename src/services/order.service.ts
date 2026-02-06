@@ -58,7 +58,9 @@ export const orderService = {
   async createOrder(data: {
     customer_name: string;
     customer_phone: string;
-    customer_address: string;
+    customer_address?: string;
+    scheduled_time?: string;
+    delivery_method?: 'entrega' | 'retirada';
     observations?: string;
     items: CartItem[];
     origin?: 'whatsapp' | 'site' | 'balcao' | 'ifood';
@@ -73,12 +75,16 @@ export const orderService = {
     const orderData = {
       customer_name: data.customer_name,
       customer_phone: data.customer_phone,
-      customer_address: data.customer_address,
+      customer_address: data.customer_address || null,
+      scheduled_time: data.scheduled_time || null,
+      delivery_method: data.delivery_method || 'retirada',
+      delivery_fee: 0,
       observations: data.observations || null,
       total_price: totalPrice,
       status: 'pending' as OrderStatus,
       origin: data.origin || 'site',
       payment_method: data.payment_method || 'cartao',
+      payment_status: 'pending' as const,
       user_id: auth.currentUser?.uid || null,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp()

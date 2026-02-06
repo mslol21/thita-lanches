@@ -28,7 +28,7 @@ export interface Order {
   id: string;
   customer_name: string;
   customer_phone: string;
-  customer_address: string;
+  customer_address?: string | null;
   neighborhood_id?: string;
   neighborhood_name?: string;
   delivery_fee: number;
