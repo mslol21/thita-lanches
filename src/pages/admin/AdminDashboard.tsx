@@ -18,7 +18,8 @@ import {
   List,
   Trash2,
   MapPin,
-  Settings
+  Settings,
+  AlertTriangle
 } from 'lucide-react';
 import { NeighborhoodsTable } from '@/components/admin/NeighborhoodsTable';
 import { SettingsPanel } from '@/components/admin/SettingsPanel';
