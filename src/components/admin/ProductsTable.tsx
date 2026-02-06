@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { getProductIcon } from '@/lib/product-icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -87,15 +88,20 @@ export function ProductsTable({ products }: ProductsTableProps) {
             {products.map((product) => (
               <TableRow key={product.id} className="group hover:bg-muted/30">
                 <TableCell>
-                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted border border-border">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted border border-border flex items-center justify-center">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform"
                       />
+                    ) : product.icon ? (
+                      (() => {
+                        const Icon = getProductIcon(product.icon);
+                        return Icon ? <Icon className="h-6 w-6 text-primary" /> : <span className="text-xl">🍔</span>;
+                      })()
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xl">
+                      <div className="text-xl">
                         🍔
                       </div>
                     )}
