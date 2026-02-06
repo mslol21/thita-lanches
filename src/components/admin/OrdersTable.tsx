@@ -177,15 +177,15 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                       {order.status === 'preparing' && (
                         <Button 
                           size="sm" 
-                          className="h-8 sm:h-9 bg-blue-600 hover:bg-blue-700 text-white gap-1 px-2 sm:px-4 text-[10px] sm:text-xs font-bold"
-                          onClick={() => updateStatus.mutate({ order, status: 'out_for_delivery' })}
+                          className="h-8 sm:h-9 bg-purple-600 hover:bg-purple-700 text-white gap-1 px-2 sm:px-4 text-[10px] sm:text-xs font-bold"
+                          onClick={() => updateStatus.mutate({ order, status: 'ready' })}
                         >
-                          <Truck className="h-3 w-3 hidden xs:block" />
-                          ENVIAR
+                          <CheckCircle className="h-3 w-3 hidden xs:block" />
+                          PRONTO
                         </Button>
                       )}
 
-                      {order.status === 'out_for_delivery' && (
+                      {order.status === 'ready' && (
                         <Button 
                           size="sm" 
                           className="h-8 sm:h-9 bg-green-600 hover:bg-green-700 text-white gap-1 px-2 sm:px-4 text-[10px] sm:text-xs font-bold"

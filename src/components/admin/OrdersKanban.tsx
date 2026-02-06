@@ -29,7 +29,7 @@ interface OrdersKanbanProps {
 const COLUMNS: { status: OrderStatus; label: string; icon: React.ElementType; color: string }[] = [
   { status: 'pending', label: 'Recebidos', icon: Clock, color: 'text-amber-500 bg-amber-500/10' },
   { status: 'preparing', label: 'Em Preparo', icon: ChefHat, color: 'text-blue-500 bg-blue-500/10' },
-  { status: 'out_for_delivery', label: 'Prontos / Entrega', icon: Truck, color: 'text-purple-500 bg-purple-500/10' },
+  { status: 'ready', label: 'Prontos para Retirada', icon: CheckCircle, color: 'text-purple-500 bg-purple-500/10' },
   { status: 'delivered', label: 'Finalizados', icon: CheckCircle, color: 'text-green-500 bg-green-500/10' },
 ];
 
@@ -51,8 +51,8 @@ export function OrdersKanban({ orders }: OrdersKanbanProps) {
   const handleNextStatus = (order: Order) => {
     const statusMap: Record<string, OrderStatus> = {
       'pending': 'preparing',
-      'preparing': 'out_for_delivery',
-      'out_for_delivery': 'delivered'
+      'preparing': 'ready',
+      'ready': 'delivered'
     };
     
     const nextStatus = statusMap[order.status];
@@ -153,8 +153,8 @@ export function OrdersKanban({ orders }: OrdersKanbanProps) {
                             }}
                           >
                             {column.status === 'pending' && <><ChefHat className="h-4 w-4" /> COMEÇAR PREPARO</>}
-                            {column.status === 'preparing' && <><Truck className="h-4 w-4" /> FINALIZAR / ENVIAR</>}
-                            {column.status === 'out_for_delivery' && <><CheckCircle className="h-4 w-4" /> CONCLUIR</>}
+                            {column.status === 'preparing' && <><CheckCircle className="h-4 w-4" /> PRONTO PARA RETIRADA</>}
+                            {column.status === 'ready' && <><CheckCircle className="h-4 w-4" /> CONCLUIR</>}
                           </Button>
                         )}
                       </CardContent>

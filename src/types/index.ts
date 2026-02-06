@@ -22,7 +22,7 @@ export interface CartItem {
   quantity: number;
 }
 
-export type OrderStatus = 'pending_payment' | 'pending' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending_payment' | 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 
 export interface Order {
   id: string;

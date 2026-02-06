@@ -16,13 +16,21 @@ const statusConfig: Record<OrderStatus, { icon: React.ElementType; className: st
     icon: ChefHat,
     className: 'bg-primary/20 text-primary border-primary/30',
   },
-  out_for_delivery: {
-    icon: Truck,
-    className: 'bg-info/20 text-info border-info/30',
+  ready: {
+    icon: CheckCircle,
+    className: 'bg-purple-500/20 text-purple-600 border-purple-500/30',
   },
   delivered: {
     icon: CheckCircle,
     className: 'bg-success/20 text-success border-success/30',
+  },
+  pending_payment: {
+    icon: Clock,
+    className: 'bg-amber-500/20 text-amber-600 border-amber-500/30',
+  },
+  cancelled: {
+    icon: Clock,
+    className: 'bg-destructive/20 text-destructive border-destructive/30',
   },
 };
 

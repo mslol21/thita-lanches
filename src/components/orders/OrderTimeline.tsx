@@ -9,11 +9,11 @@ interface OrderTimelineProps {
 const steps: { status: OrderStatus; label: string; icon: React.ElementType }[] = [
   { status: 'pending', label: 'Aguardando', icon: Clock },
   { status: 'preparing', label: 'Em preparo', icon: ChefHat },
-  { status: 'out_for_delivery', label: 'Saiu para entrega', icon: Truck },
-  { status: 'delivered', label: 'Entregue', icon: CheckCircle },
+  { status: 'ready', label: 'Pronto para retirada', icon: CheckCircle },
+  { status: 'delivered', label: 'Finalizado', icon: CheckCircle },
 ];
 
-const statusOrder: OrderStatus[] = ['pending', 'preparing', 'out_for_delivery', 'delivered'];
+const statusOrder: OrderStatus[] = ['pending', 'preparing', 'ready', 'delivered'];
 
 export function OrderTimeline({ currentStatus }: OrderTimelineProps) {
   const currentIndex = statusOrder.indexOf(currentStatus);
