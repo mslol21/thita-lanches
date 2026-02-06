@@ -9,8 +9,11 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isAuthenticated() && 
-        get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role == 'admin';
+      return isAuthenticated() && (
+        request.auth.token.email == 'admin@talita.com' ||
+        (exists(/databases/$(database)/documents/user_roles/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role == 'admin')
+      );
     }
     
     function isOwner(userId) {
