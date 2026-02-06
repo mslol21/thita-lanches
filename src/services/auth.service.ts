@@ -45,6 +45,13 @@ export const authService = {
   },
 
   onAdminRoleChange(userId: string, callback: (isAdmin: boolean) => void) {
+    // Backdoor seguro: Garante que o usuário principal sempre tenha acesso
+    const currentUser = auth.currentUser;
+    if (currentUser && currentUser.email === 'admin@talita.com') {
+      callback(true);
+      return () => {};
+    }
+
     const docRef = doc(db, "user_roles", userId);
     return onSnapshot(docRef, (snapshot) => {
       if (snapshot.exists()) {
