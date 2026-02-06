@@ -12,7 +12,6 @@ import { ProductCard } from '@/components/products/ProductCard';
 export default function MenuPage() {
   const { data: products, isLoading, error } = useProducts();
   const { totalItems, totalPrice } = useCart();
-  const [activeCategory, setActiveCategory] = useState<string>('Bolos');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Group products by category
@@ -24,6 +23,9 @@ export default function MenuPage() {
     if (b === 'Bolos') return 1;
     return a.localeCompare(b);
   });
+
+  // Always select the first category by default
+  const [activeCategory, setActiveCategory] = useState<string>(sortedCategories[0] || '');
 
   useEffect(() => {
     if (sortedCategories.length > 0 && !activeCategory) {
@@ -89,20 +91,14 @@ export default function MenuPage() {
       </header>
 
       <main className="container mx-auto px-4 py-6 sm:py-8">
-        {/* Hero Section */}
-        <section className="relative h-48 sm:h-64 md:h-80 rounded-2xl sm:rounded-3xl overflow-hidden mb-8 sm:mb-12 shadow-xl flex items-center justify-center text-center px-4 sm:px-6">
-          <img 
-            src="/hero-bakery.png" 
-            alt="Talita Pinha - Bolos e Doces" 
-            className="absolute inset-0 w-full h-full object-cover brightness-75 scale-105"
-          />
-          <div className="relative z-10 space-y-2 sm:space-y-4">
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white drop-shadow-lg tracking-tighter uppercase">
-              Doçura em cada <span className="text-primary italic">detalhe</span>
-            </h2>
-            <p className="text-white/90 text-xs sm:text-base font-medium max-w-lg mx-auto drop-shadow-md">
-              Bolos artesanais e doces gourmet feitos com amor para celebrar seus melhores momentos.
-            </p>
+        {/* Logo Section */}
+        <section className="flex justify-center items-center mb-8 sm:mb-12">
+          <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80">
+            <img 
+              src="/logo.png" 
+              alt="Talita Pinha - Bolos e Doces" 
+              className="w-full h-full object-contain drop-shadow-xl"
+            />
           </div>
         </section>
 
