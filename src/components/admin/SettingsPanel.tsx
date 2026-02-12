@@ -17,6 +17,7 @@ export function SettingsPanel() {
     is_open: true,
     store_address: '',
     store_cep: '',
+    fixed_delivery_fee: '',
   });
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export function SettingsPanel() {
         is_open: settings.is_open,
         store_address: settings.store_address || '',
         store_cep: settings.store_cep || '',
+        fixed_delivery_fee: settings.fixed_delivery_fee?.toString() || '0',
       });
     }
   }, [settings]);
@@ -58,6 +60,7 @@ export function SettingsPanel() {
       is_open: formData.is_open,
       store_address: formData.store_address,
       store_cep: formData.store_cep,
+      fixed_delivery_fee: parseFloat(formData.fixed_delivery_fee) || 0,
     });
   };
 
@@ -111,6 +114,26 @@ export function SettingsPanel() {
             </div>
           </div>
           <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-tighter">Este endereço é usado como ponto central para cálculo de distâncias.</p>
+        </div>
+
+        {/* Taxa de Entrega Fixa */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-muted/50 space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <CreditCard className="h-5 w-5" />
+            <Label className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">Taxa Fixa de Entrega (R$)</Label>
+          </div>
+          <div className="relative">
+            <Input 
+              type="number"
+              step="0.01"
+              value={formData.fixed_delivery_fee}
+              onChange={(e) => setFormData(prev => ({ ...prev, fixed_delivery_fee: e.target.value }))}
+              placeholder="Ex: 5.00"
+              className="h-12 pl-10 font-black text-lg"
+            />
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground">R$</span>
+          </div>
+          <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-tighter">Valor cobrado em todas as entregas dentro do limite de distância.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

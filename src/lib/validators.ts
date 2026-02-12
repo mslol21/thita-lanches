@@ -6,15 +6,15 @@ export const checkoutSchema = z.object({
   delivery_method: z.enum(['entrega', 'retirada']),
   scheduled_time: z.string().optional(),
   customer_address: z.string().optional(),
+  customer_neighborhood: z.string().optional(),
   customer_cep: z.string().optional(),
-  neighborhood_id: z.string().optional(),
   observations: z.string().max(500).optional(),
   payment_method: z.enum(['cartao', 'dinheiro', 'pix'], {
     required_error: 'Selecione uma forma de pagamento',
   }),
 }).refine((data) => {
   if (data.delivery_method === 'entrega') {
-    return !!data.customer_address && !!data.neighborhood_id && (!!data.customer_cep && data.customer_cep.length >= 8);
+    return !!data.customer_address && (!!data.customer_cep && data.customer_cep.length >= 8);
   }
   return !!data.scheduled_time;
 }, {

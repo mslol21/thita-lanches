@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, CreditCard, Banknote, QrCode, Clock, MapPin, Truck, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useCart } from '@/contexts/CartContext';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useSettings } from '@/hooks/useSettings';
-import { useNeighborhoods } from '@/hooks/useNeighborhoods';
+import { toast } from 'sonner';
 import { checkoutSchema } from '@/lib/validators';
 import { formatCurrency } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -32,7 +32,6 @@ export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
   const createOrder = useCreateOrder();
   const { data: settings } = useSettings();
-  const { data: neighborhoods } = useNeighborhoods();
   
   const [formData, setFormData] = useState({
     customer_name: '',
@@ -41,68 +40,91 @@ export default function CheckoutPage() {
     scheduled_time: '',
     customer_address: '',
     customer_cep: '',
-    neighborhood_id: '',
+    customer_neighborhood: '',
     observations: '',
     payment_method: '' as 'pix' | 'dinheiro' | 'cartao',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isCEPTitle, setIsCEPTitle] = useState(false);
 
   const timeSlots = generateTimeSlots();
 
-  // Filtrar bairros permitidos pela distância
-  const availableNeighborhoods = useMemo(() => {
-    if (!neighborhoods || !settings) return [];
-    return neighborhoods.filter(n => n.active && n.distance_km <= settings.max_delivery_km);
-  }, [neighborhoods, settings]);
-
-  const selectedNeighborhood = useMemo(() => {
-    return availableNeighborhoods.find(n => n.id === formData.neighborhood_id);
-  }, [formData.neighborhood_id, availableNeighborhoods]);
-
-  const deliveryFee = formData.delivery_method === 'entrega' ? (selectedNeighborhood?.delivery_fee || 0) : 0;
+  const deliveryFee = formData.delivery_method === 'entrega' ? (settings?.fixed_delivery_fee || 0) : 0;
   const finalTotal = totalPrice + deliveryFee;
 
-  // Cálculo de tempo: min_production_time + (5min/km)
-  const estimatedTime = useMemo(() => {
-    if (!settings) return 0;
-    let time = settings.min_production_time;
-    if (formData.delivery_method === 'entrega' && selectedNeighborhood) {
-      time += Math.ceil(selectedNeighborhood.distance_km * 5);
-    }
-    return time;
-  }, [settings, formData.delivery_method, selectedNeighborhood]);
+  const estimatedTime = settings?.min_production_time || 0;
 
-  const [isCEPTitle, setIsCEPTitle] = useState(false);
-
-  // Busca CEP automático
+  // Busca CEP automático e verifica distância
   useEffect(() => {
     const cep = formData.customer_cep?.replace(/\D/g, '');
-    if (cep && cep.length === 8) {
+    if (cep && cep.length === 8 && settings) {
       setIsCEPTitle(true);
-      fetch(`https://viacep.com.br/ws/${cep}/json/`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data.erro) {
-            setFormData(prev => ({
-              ...prev,
-              customer_address: `${data.logradouro}${data.bairro ? `, ${data.bairro}` : ''}`,
-            }));
-            
-            // Tentar encontrar o bairro na lista
-            if (neighborhoods) {
-              const matched = neighborhoods.find(n => 
-                n.name.toLowerCase() === data.bairro?.toLowerCase() || 
-                data.bairro?.toLowerCase().includes(n.name.toLowerCase())
-              );
-              if (matched) {
-                setFormData(prev => ({ ...prev, neighborhood_id: matched.id }));
-              }
+      
+      const checkCoverage = async () => {
+        try {
+          // 1. Buscar endereço via ViaCEP
+          const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+          const data = await res.json();
+          
+          if (data.erro) {
+            toast.error('CEP não encontrado');
+            return;
+          }
+
+          setFormData(prev => ({
+            ...prev,
+            customer_address: data.logradouro,
+            customer_neighborhood: data.bairro || '',
+          }));
+
+          // 2. Verificar distância (Geocoding)
+          // Store Coordinates
+          const storeRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(settings.store_address || '')}&limit=1`, {
+            headers: { 'User-Agent': 'TalitaPinhaApp' }
+          });
+          const storeData = await storeRes.json();
+          
+          // Customer Coordinates
+          const custRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${cep},Brazil&limit=1`, {
+            headers: { 'User-Agent': 'TalitaPinhaApp' }
+          });
+          const custData = await custRes.json();
+
+          if (storeData.length > 0 && custData.length > 0) {
+            const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+              const R = 6371;
+              const dLat = (lat2 - lat1) * Math.PI / 180;
+              const dLon = (lon2 - lon1) * Math.PI / 180;
+              const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              return R * c;
+            };
+
+            const dist = getDistance(
+              parseFloat(storeData[0].lat), parseFloat(storeData[0].lon),
+              parseFloat(custData[0].lat), parseFloat(custData[0].lon)
+            );
+
+            if (dist > settings.max_delivery_km) {
+              toast.error(`Fora da área de cobertura! Esta distância (${dist.toFixed(1)}km) excede o limite de ${settings.max_delivery_km}km.`, {
+                duration: 5000
+              });
+            } else {
+              toast.success(`Endereço dentro da área de cobertura (${dist.toFixed(1)}km)!`);
             }
           }
-        })
-        .finally(() => setIsCEPTitle(false));
+        } catch (err) {
+          console.error('Erro na busca de cobertura:', err);
+        } finally {
+          setIsCEPTitle(false);
+        }
+      };
+
+      checkCoverage();
     }
-  }, [formData.customer_cep, neighborhoods]);
+  }, [formData.customer_cep, settings]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -135,12 +157,13 @@ export default function CheckoutPage() {
       } as any);
       
       const deliveryInfo = formData.delivery_method === 'entrega' 
-        ? `*Endereço:* ${formData.customer_address}\n*CEP:* ${formData.customer_cep}\n*Bairro:* ${selectedNeighborhood?.name}\n*Tempo Estimado:* ~${estimatedTime} min`
+        ? `*Endereço:* ${formData.customer_address}\n*CEP:* ${formData.customer_cep}\n*Bairro:* ${formData.customer_neighborhood}\n*Tempo Estimado:* ~${estimatedTime} min`
         : `*Horário de Retirada:* ${formData.scheduled_time}`;
 
       const message = encodeURIComponent(
         `🎂 *Novo Pedido - Talita Pinha*\n\n` +
         `*Nome:* ${formData.customer_name}\n` +
+        `*Pedido:* #${order.id.slice(0, 8)}\n` +
         `${deliveryInfo}\n` +
         `*Pagamento:* ${formData.payment_method.toUpperCase()}\n\n` +
         `*Itens:*\n${items.map(item => `• ${item.quantity}x ${item.product.name}`).join('\n')}\n\n` +
@@ -148,16 +171,14 @@ export default function CheckoutPage() {
         (deliveryFee > 0 ? `*Taxa Entrega:* ${formatCurrency(deliveryFee)}\n` : '') +
         `*Total:* ${formatCurrency(finalTotal)}\n\n` +
         (formData.observations ? `*Observações:* ${formData.observations}\n\n` : '') +
-        `Pedido #${order.id.slice(0, 8)}`
+        `*Acesse o cardápio:* ${window.location.origin}`
       );
       
-      const businessPhone = import.meta.env.VITE_BUSINESS_WHATSAPP || '5598991136437';
-      window.open(`https://wa.me/${businessPhone}?text=${message}`, '_blank');
-      
+      window.open(`https://wa.me/${import.meta.env.VITE_BUSINESS_WHATSAPP}?text=${message}`, '_blank');
       clearCart();
-      navigate(`/pedido/${order.id}`);
-    } catch (err: any) {
-      console.error(err);
+      navigate('/');
+    } catch (error) {
+      toast.error('Erro ao enviar pedido. Tente novamente.');
     }
   };
 
@@ -167,56 +188,51 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-pink-50 min-h-screen">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/carrinho">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <h1 className="font-display text-2xl font-bold text-foreground">
-            Finalizar Pedido
-          </h1>
-        </div>
+    <div className="min-h-screen bg-background pb-20">
+      <div className="container mx-auto px-4 py-8">
+        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 font-bold transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Voltar ao Cardápio
+        </Link>
 
-        <div className="grid gap-6 md:grid-cols-5">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <form onSubmit={handleSubmit} className="md:col-span-3 space-y-6">
             <div className="bg-card rounded-lg border border-border p-6 space-y-4 shadow-sm">
-              <h2 className="font-semibold text-lg">Seus dados</h2>
-              
-              <div className="space-y-2">
-                <Label htmlFor="customer_name">Nome completo *</Label>
-                <Input
-                  id="customer_name"
-                  name="customer_name"
-                  value={formData.customer_name}
-                  onChange={handleChange}
-                  placeholder="Seu nome"
-                  className={errors.customer_name ? 'border-destructive' : ''}
-                />
-                {errors.customer_name && <p className="text-xs text-destructive">{errors.customer_name}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="customer_phone">WhatsApp *</Label>
-                <Input
-                  id="customer_phone"
-                  name="customer_phone"
-                  value={formData.customer_phone}
-                  onChange={handleChange}
-                  placeholder="(00) 00000-0000"
-                  className={errors.customer_phone ? 'border-destructive' : ''}
-                />
-                {errors.customer_phone && <p className="text-xs text-destructive">{errors.customer_phone}</p>}
+              <h2 className="font-semibold text-lg flex items-center gap-2">
+                👤 Seus Dados
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customer_name">Nome Completo *</Label>
+                  <Input
+                    id="customer_name"
+                    name="customer_name"
+                    value={formData.customer_name}
+                    onChange={handleChange}
+                    placeholder="Como vamos te chamar?"
+                    className={errors.customer_name ? 'border-destructive' : ''}
+                  />
+                  {errors.customer_name && <p className="text-xs text-destructive font-bold">{errors.customer_name}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customer_phone">WhatsApp *</Label>
+                  <Input
+                    id="customer_phone"
+                    name="customer_phone"
+                    value={formData.customer_phone}
+                    onChange={handleChange}
+                    placeholder="(00) 00000-0000"
+                    className={errors.customer_phone ? 'border-destructive' : ''}
+                  />
+                  {errors.customer_phone && <p className="text-xs text-destructive font-bold">{errors.customer_phone}</p>}
+                </div>
               </div>
             </div>
 
-            <div className="bg-card rounded-lg border border-border p-6 space-y-6 shadow-sm">
+            <div className="bg-card rounded-lg border border-border p-6 space-y-4 shadow-sm">
               <h2 className="font-semibold text-lg flex items-center gap-2">
-                <Truck className="h-5 w-5" /> Método de Recebimento
+                🚚 Método de Recebimento
               </h2>
-
+              
               <Tabs 
                 value={formData.delivery_method} 
                 onValueChange={(v) => {
@@ -256,7 +272,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="bg-blue-50 p-3 rounded-lg flex gap-3 text-blue-800 text-sm">
                     <MapPin className="h-5 w-5 shrink-0" />
-                    <p><strong>Local de Retirada:</strong> Rua das Flores, 123 - Centro</p>
+                    <p><strong>Local de Retirada:</strong> {settings?.store_address || 'Rua das Flores, 123 - Centro'}</p>
                   </div>
                 </div>
               ) : (
@@ -264,33 +280,33 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="customer_cep">CEP *</Label>
-                      <Input
-                        id="customer_cep"
-                        name="customer_cep"
-                        value={formData.customer_cep}
-                        onChange={handleChange}
-                        placeholder="00000-000"
-                        className={errors.customer_cep ? 'border-destructive' : ''}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="customer_cep"
+                          name="customer_cep"
+                          value={formData.customer_cep}
+                          onChange={handleChange}
+                          placeholder="00000-000"
+                          className={errors.customer_cep ? 'border-destructive' : ''}
+                        />
+                        {isCEPTitle && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Bairro *</Label>
-                      <Select 
-                        value={formData.neighborhood_id} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood_id: value }))}
-                      >
-                        <SelectTrigger className={errors.neighborhood_id || errors.delivery_method ? 'border-destructive' : ''}>
-                          <SelectValue placeholder="Selecione seu bairro" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableNeighborhoods.map(n => (
-                            <SelectItem key={n.id} value={n.id}>
-                              {n.name} ({formatCurrency(n.delivery_fee)})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="customer_neighborhood">Bairro *</Label>
+                      <Input
+                        id="customer_neighborhood"
+                        name="customer_neighborhood"
+                        value={formData.customer_neighborhood}
+                        onChange={handleChange}
+                        placeholder="Ex: Centro"
+                        className={errors.customer_neighborhood ? 'border-destructive' : ''}
+                      />
                     </div>
                   </div>
 
@@ -305,13 +321,6 @@ export default function CheckoutPage() {
                       className={errors.customer_address ? 'border-destructive' : ''}
                     />
                   </div>
-
-                  {selectedNeighborhood && (
-                    <div className="bg-purple-50 p-3 rounded-lg text-purple-800 text-xs flex justify-between">
-                      <span>Distância: {selectedNeighborhood.distance_km}km</span>
-                      <span>Taxi: {formatCurrency(selectedNeighborhood.delivery_fee)}</span>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

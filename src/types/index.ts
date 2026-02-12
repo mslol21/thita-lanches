@@ -46,6 +46,7 @@ export interface Order {
   scheduled_time?: string | null; // Para retiradas agendadas
   estimated_time?: number; // Tempo calculado em minutos
   customer_cep?: string | null;
+  customer_neighborhood?: string | null;
 }
 
 export interface Neighborhood {
@@ -63,6 +64,7 @@ export interface SystemSettings {
   is_open: boolean;
   store_address?: string;
   store_cep?: string;
+  fixed_delivery_fee: number;
 }
 
 export interface OrderItem {

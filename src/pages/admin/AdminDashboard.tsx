@@ -180,10 +180,12 @@ export default function AdminDashboard() {
                   <List className="h-4 w-4" />
                   Categorias
                 </TabsTrigger>
+                {/* 
                 <TabsTrigger value="neighborhoods" className="gap-2 font-bold px-6">
                   <MapPin className="h-4 w-4" />
                   Bairros
-                </TabsTrigger>
+                </TabsTrigger> 
+                */}
                 <TabsTrigger value="analytics" className="gap-2 font-bold px-6">
                   <BarChart3 className="h-4 w-4" />
                   Análises
@@ -329,7 +331,8 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </TabsContent>
-
+            
+            {/* 
             <TabsContent value="neighborhoods" className="focus-visible:outline-none">
               <Card>
                 <CardHeader className="border-b px-6 py-4">
@@ -340,6 +343,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </TabsContent>
+            */}
 
             <TabsContent value="settings" className="focus-visible:outline-none">
               <Card>
