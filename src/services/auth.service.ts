@@ -32,14 +32,22 @@ export const authService = {
   },
 
   async checkAdminRole(userId: string): Promise<boolean> {
+    // 1. Verificação por E-mail (Mais rápida e segura contra erros de banco)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.email === 'admin@talita.com') return true;
+
+    // 2. Verificação no Banco (Para outros admins se houver)
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
     
-    if (error || !data) return false;
-    return data.role === 'admin';
+    if (error) {
+      console.error("Erro ao verificar cargo no Supabase:", error);
+      return false;
+    }
+    return data?.role === 'admin';
   },
 
   onAuthStateChange(callback: (user: User | null) => void) {

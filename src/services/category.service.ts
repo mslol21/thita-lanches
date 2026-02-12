@@ -1,45 +1,34 @@
-import { db } from '@/integrations/firebase/config';
-import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  orderBy,
-  serverTimestamp 
-} from "firebase/firestore";
+import { supabase } from "@/integrations/supabase/client";
 import { Category } from '@/types';
 
 export const categoryService = {
   async getCategories(): Promise<Category[]> {
-    const categoriesCol = collection(db, "categories");
-    const q = query(categoriesCol, orderBy("name"));
-    const snapshot = await getDocs(q);
+    const { data, error } = await supabase
+      .from('categories' as any)
+      .select('*')
+      .order('name');
     
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      created_at: doc.data().created_at?.toDate()?.toISOString() || new Date().toISOString(),
-    } as Category));
+    if (error) throw error;
+    return data as unknown as Category[];
   },
 
   async createCategory(name: string): Promise<Category> {
-    const categoriesCol = collection(db, "categories");
-    const docRef = await addDoc(categoriesCol, {
-      name,
-      created_at: serverTimestamp(),
-    });
+    const { data, error } = await supabase
+      .from('categories' as any)
+      .insert([{ name }])
+      .select()
+      .single();
 
-    return {
-      id: docRef.id,
-      name,
-      created_at: new Date().toISOString(),
-    };
+    if (error) throw error;
+    return data as unknown as Category;
   },
 
   async deleteCategory(id: string): Promise<void> {
-    const docRef = doc(db, "categories", id);
-    await deleteDoc(docRef);
+    const { error } = await supabase
+      .from('categories' as any)
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
   }
 };

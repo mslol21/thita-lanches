@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { settingsService } from '@/services/settings.service';
 import { SystemSettings } from '@/types';
-import { auth } from '@/integrations/firebase/config';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export function useSettings() {
@@ -21,9 +21,10 @@ export function useUpdateSettings() {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
       toast.success('Configurações atualizadas com sucesso!');
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
       console.error('Erro ao atualizar configurações:', error);
-      const email = auth.currentUser?.email;
+      const { data: { user } } = await supabase.auth.getUser();
+      const email = user?.email;
       toast.error(`Erro ao atualizar: ${error.message}${email ? ` (Logado como: ${email})` : ''}`);
     },
   });

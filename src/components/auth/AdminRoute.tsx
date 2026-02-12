@@ -43,7 +43,7 @@ export function AdminRoute({ children }: AdminRouteProps) {
           </div>
           <div className="mt-8 p-4 bg-muted/50 rounded-lg border border-border">
             <p className="text-[10px] font-mono text-muted-foreground break-all">
-              Seu ID: {user.uid}
+              Seu ID: {user.id}
             </p>
           </div>
         </div>

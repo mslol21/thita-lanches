@@ -1,52 +1,43 @@
-import { db } from '@/integrations/firebase/config';
-import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  orderBy,
-  serverTimestamp 
-} from "firebase/firestore";
+import { supabase } from "@/integrations/supabase/client";
 import { Neighborhood } from '@/types';
 
 export const neighborhoodService = {
   async getNeighborhoods(): Promise<Neighborhood[]> {
-    const col = collection(db, "neighborhoods");
-    const q = query(col, orderBy("name"));
-    const snapshot = await getDocs(q);
+    const { data, error } = await supabase
+      .from('neighborhoods' as any)
+      .select('*')
+      .order('name');
     
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Neighborhood));
+    if (error) throw error;
+    return data as unknown as Neighborhood[];
   },
 
   async createNeighborhood(neighborhood: Omit<Neighborhood, 'id'>): Promise<Neighborhood> {
-    const col = collection(db, "neighborhoods");
-    const docRef = await addDoc(col, {
-      ...neighborhood,
-      created_at: serverTimestamp()
-    });
+    const { data, error } = await supabase
+      .from('neighborhoods' as any)
+      .insert([neighborhood])
+      .select()
+      .single();
 
-    return {
-      id: docRef.id,
-      ...neighborhood
-    };
+    if (error) throw error;
+    return data as unknown as Neighborhood;
   },
 
   async updateNeighborhood(id: string, neighborhood: Partial<Neighborhood>): Promise<void> {
-    const docRef = doc(db, "neighborhoods", id);
-    await updateDoc(docRef, {
-      ...neighborhood,
-      updated_at: serverTimestamp()
-    });
+    const { error } = await supabase
+      .from('neighborhoods' as any)
+      .update(neighborhood)
+      .eq('id', id);
+    
+    if (error) throw error;
   },
 
   async deleteNeighborhood(id: string): Promise<void> {
-    const docRef = doc(db, "neighborhoods", id);
-    await deleteDoc(docRef);
+    const { error } = await supabase
+      .from('neighborhoods' as any)
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
   }
 };

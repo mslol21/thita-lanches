@@ -62,10 +62,10 @@ export default function AdminLoginPage() {
     try {
       await loginWithEmail(email, password);
     } catch (err: any) {
-      if (err.message.includes('auth/invalid-credential')) {
+      if (err.message.includes('Invalid login credentials')) {
         setError('E-mail ou senha incorretos');
       } else {
-        setError('Erro ao fazer login. Tente novamente.');
+        setError('Erro ao fazer login: ' + err.message);
       }
     } finally {
       setIsLoading(false);
@@ -104,7 +104,7 @@ export default function AdminLoginPage() {
                   Você está logado como <strong>{user.email}</strong>, mas não tem acesso ao painel.
                 </p>
                 <div className="bg-white p-2 border border-amber-100 rounded text-[10px] font-mono break-all text-muted-foreground">
-                   UID: {user.uid}
+                   ID: {user.id}
                 </div>
                 <Button variant="ghost" size="sm" onClick={logout} className="w-full text-xs h-8">
                   Sair e tentar outra conta

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from 'firebase/auth';
+import { User } from '@supabase/supabase-js';
 import { authService } from '@/services/auth.service';
 
 interface AuthContextType {
@@ -21,15 +21,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let roleUnsubscribe: () => void = () => {};
 
-    const authUnsubscribe = authService.onAuthStateChange(async (firebaseUser) => {
-      setUser(firebaseUser);
+    const authUnsubscribe = authService.onAuthStateChange(async (supabaseUser) => {
+      setUser(supabaseUser);
       
       // Limpar listener anterior se houver
       roleUnsubscribe();
 
-      if (firebaseUser) {
+      if (supabaseUser) {
         // Inicia listener em tempo real para o papel de admin
-        roleUnsubscribe = authService.onAdminRoleChange(firebaseUser.uid, (adminStatus) => {
+        roleUnsubscribe = authService.onAdminRoleChange(supabaseUser.id, (adminStatus) => {
           setIsAdmin(adminStatus);
           setIsLoading(false);
         });

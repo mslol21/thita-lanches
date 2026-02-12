@@ -170,5 +170,21 @@ CREATE POLICY "Admin neighborhoods write" ON neighborhoods FOR ALL USING (
 -- User Roles: Read Own/Admin, Write Admin (Manual)
 CREATE POLICY "Users read own role" ON user_roles FOR SELECT USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'));
 
--- 6. Storage (Buckets)
--- Execute no painel do Supabase: Create bucket 'products' and set it to public
+-- 10. Auto-Admin Trigger (Opcional: Torna admin@talita.com admin automaticamente no cadastro)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  IF NEW.email = 'admin@talita.com' THEN
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, 'admin');
+  ELSE
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, 'customer');
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
