@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                     <OrdersKanban 
                       orders={orders.filter(o => {
                         const matchesOrigin = originFilter ? o.origin === originFilter : true;
-                        return (o.status !== 'cancelled' && o.status !== 'delivered') && matchesOrigin;
+                        return (o.status !== 'cancelled') && matchesOrigin;
                       })} 
                     />
                   ) : (

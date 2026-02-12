@@ -46,6 +46,7 @@ export default function CheckoutPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isCEPTitle, setIsCEPTitle] = useState(false);
+  const [outOfRange, setOutOfRange] = useState(false);
 
   const timeSlots = generateTimeSlots();
 
@@ -108,10 +109,12 @@ export default function CheckoutPage() {
             );
 
             if (dist > settings.max_delivery_km) {
-              toast.error(`Fora da área de cobertura! Esta distância (${dist.toFixed(1)}km) excede o limite de ${settings.max_delivery_km}km.`, {
+              setOutOfRange(true);
+              toast.error(`Fora da área de cobertura! Infelizmente não realizamos entrega nesta distância (${dist.toFixed(1)}km).`, {
                 duration: 5000
               });
             } else {
+              setOutOfRange(false);
               toast.success(`Endereço dentro da área de cobertura (${dist.toFixed(1)}km)!`);
             }
           }
@@ -144,6 +147,16 @@ export default function CheckoutPage() {
         if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
+      return;
+    }
+
+    if (formData.delivery_method === 'entrega' && outOfRange) {
+      toast.error('Não podemos concluir o pedido: Endereço fora da área de entrega.');
+      return;
+    }
+
+    if (formData.delivery_method === 'entrega' && outOfRange) {
+      toast.error('Não podemos concluir o pedido: Endereço fora da área de entrega.');
       return;
     }
 
@@ -321,6 +334,18 @@ export default function CheckoutPage() {
                       className={errors.customer_address ? 'border-destructive' : ''}
                     />
                   </div>
+
+                {outOfRange && (
+                  <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl flex items-center gap-3 animate-in shake duration-500">
+                    <div className="h-10 w-10 rounded-full bg-destructive/20 flex items-center justify-center shrink-0">
+                      <MapPin className="h-5 w-5 text-destructive" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-destructive uppercase tracking-tight">Fora da Área de Entrega</p>
+                      <p className="text-xs text-destructive/80 font-medium">Infelizmente este endereço excede nosso limite de entrega. Por favor, selecione "Retirada" ou tente outro endereço.</p>
+                    </div>
+                  </div>
+                )}
                 </div>
               )}
             </div>
