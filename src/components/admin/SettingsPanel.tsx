@@ -31,8 +31,8 @@ export function SettingsPanel() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings.mutate({
-      min_production_time: parseInt(formData.min_production_time),
-      max_delivery_km: parseFloat(formData.max_delivery_km),
+      min_production_time: parseInt(formData.min_production_time) || 0,
+      max_delivery_km: parseFloat(formData.max_delivery_km) || 0,
       pix_key: formData.pix_key,
       is_open: formData.is_open,
     });
