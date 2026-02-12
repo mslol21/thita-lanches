@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, CreditCard, Banknote, QrCode, Clock, MapPin, Truck, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
