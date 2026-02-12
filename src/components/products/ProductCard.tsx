@@ -75,12 +75,6 @@ export function ProductCard({ product }: ProductCardProps) {
             <span className="font-black text-base sm:text-lg text-primary">
               {formatPrice(product.price)}
             </span>
-            
-            <div 
-              className="h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-110 transition-all active:scale-90"
-            >
-              <Plus className="h-5 w-5 sm:h-6 sm:w-6 stroke-[3]" />
-            </div>
           </div>
         </div>
       </div>

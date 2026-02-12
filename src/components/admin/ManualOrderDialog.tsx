@@ -168,9 +168,6 @@ export function ManualOrderDialog({ open, onOpenChange, products }: ManualOrderD
                     <span className="text-lg font-black text-primary mt-auto">
                       {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Plus className="h-4 w-4 text-primary" />
-                    </div>
                   </button>
                 ))}
               </div>
