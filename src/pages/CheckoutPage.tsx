@@ -72,6 +72,38 @@ export default function CheckoutPage() {
     return time;
   }, [settings, formData.delivery_method, selectedNeighborhood]);
 
+  const [isCEPTitle, setIsCEPTitle] = useState(false);
+
+  // Busca CEP automático
+  useEffect(() => {
+    const cep = formData.customer_cep?.replace(/\D/g, '');
+    if (cep && cep.length === 8) {
+      setIsCEPTitle(true);
+      fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.erro) {
+            setFormData(prev => ({
+              ...prev,
+              customer_address: `${data.logradouro}${data.bairro ? `, ${data.bairro}` : ''}`,
+            }));
+            
+            // Tentar encontrar o bairro na lista
+            if (neighborhoods) {
+              const matched = neighborhoods.find(n => 
+                n.name.toLowerCase() === data.bairro?.toLowerCase() || 
+                data.bairro?.toLowerCase().includes(n.name.toLowerCase())
+              );
+              if (matched) {
+                setFormData(prev => ({ ...prev, neighborhood_id: matched.id }));
+              }
+            }
+          }
+        })
+        .finally(() => setIsCEPTitle(false));
+    }
+  }, [formData.customer_cep, neighborhoods]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));

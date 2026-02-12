@@ -14,7 +14,6 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
     addItem(product);
     toast.success(`${product.name} adicionado!`, {
       icon: '🍔',
@@ -32,7 +31,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card 
       className="group overflow-hidden border border-muted/50 rounded-2xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 bg-white cursor-pointer active:scale-[0.98]"
-      onClick={() => {/* To be used for opening details modal */}}
+      onClick={handleAddToCart}
     >
       <div className="flex items-center p-3 sm:p-5 gap-3 sm:gap-4">
         {/* Product Image */}
@@ -77,12 +76,11 @@ export function ProductCard({ product }: ProductCardProps) {
               {formatPrice(product.price)}
             </span>
             
-            <button 
-              onClick={handleAddToCart}
+            <div 
               className="h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-110 transition-all active:scale-90"
             >
               <Plus className="h-5 w-5 sm:h-6 sm:w-6 stroke-[3]" />
-            </button>
+            </div>
           </div>
         </div>
       </div>

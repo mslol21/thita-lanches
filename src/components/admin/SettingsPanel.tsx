@@ -32,6 +32,23 @@ export function SettingsPanel() {
     }
   }, [settings]);
 
+  // Busca CEP automático da loja
+  useEffect(() => {
+    const cep = formData.store_cep?.replace(/\D/g, '');
+    if (cep && cep.length === 8) {
+      fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.erro) {
+            setFormData(prev => ({
+              ...prev,
+              store_address: `${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`,
+            }));
+          }
+        });
+    }
+  }, [formData.store_cep]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings.mutate({
