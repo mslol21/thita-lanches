@@ -45,6 +45,7 @@ export interface Order {
   change_amount?: number | null; // Para pagamentos em dinheiro
   scheduled_time?: string | null; // Para retiradas agendadas
   estimated_time?: number; // Tempo calculado em minutos
+  customer_cep?: string | null;
 }
 
 export interface Neighborhood {
@@ -60,6 +61,8 @@ export interface SystemSettings {
   max_delivery_km: number;
   pix_key: string;
   is_open: boolean;
+  store_address?: string;
+  store_cep?: string;
 }
 
 export interface OrderItem {

@@ -15,6 +15,8 @@ export function SettingsPanel() {
     max_delivery_km: '',
     pix_key: '',
     is_open: true,
+    store_address: '',
+    store_cep: '',
   });
 
   useEffect(() => {
@@ -24,6 +26,8 @@ export function SettingsPanel() {
         max_delivery_km: settings.max_delivery_km.toString(),
         pix_key: settings.pix_key,
         is_open: settings.is_open,
+        store_address: settings.store_address || '',
+        store_cep: settings.store_cep || '',
       });
     }
   }, [settings]);
@@ -35,6 +39,8 @@ export function SettingsPanel() {
       max_delivery_km: parseFloat(formData.max_delivery_km) || 0,
       pix_key: formData.pix_key,
       is_open: formData.is_open,
+      store_address: formData.store_address,
+      store_cep: formData.store_cep,
     });
   };
 
@@ -61,6 +67,33 @@ export function SettingsPanel() {
             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_open: checked }))}
             className="scale-125"
           />
+        </div>
+
+        {/* Endereço da Loja */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-muted/50 space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <MapPin className="h-5 w-5" />
+            <Label className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">Endereço da Loja (Origem)</Label>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <Input 
+                value={formData.store_address}
+                onChange={(e) => setFormData(prev => ({ ...prev, store_address: e.target.value }))}
+                placeholder="Rua, Número, Bairro - Cidade"
+                className="h-12 font-bold"
+              />
+            </div>
+            <div>
+              <Input 
+                value={formData.store_cep}
+                onChange={(e) => setFormData(prev => ({ ...prev, store_cep: e.target.value }))}
+                placeholder="CEP: 00000-000"
+                className="h-12 font-bold"
+              />
+            </div>
+          </div>
+          <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-tighter">Este endereço é usado como ponto central para cálculo de distâncias.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

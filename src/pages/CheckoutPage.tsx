@@ -40,6 +40,7 @@ export default function CheckoutPage() {
     delivery_method: 'retirada' as 'entrega' | 'retirada',
     scheduled_time: '',
     customer_address: '',
+    customer_cep: '',
     neighborhood_id: '',
     observations: '',
     payment_method: '' as 'pix' | 'dinheiro' | 'cartao',
@@ -102,7 +103,7 @@ export default function CheckoutPage() {
       } as any);
       
       const deliveryInfo = formData.delivery_method === 'entrega' 
-        ? `*Endereço:* ${formData.customer_address}\n*Bairro:* ${selectedNeighborhood?.name}\n*Tempo Estimado:* ~${estimatedTime} min`
+        ? `*Endereço:* ${formData.customer_address}\n*CEP:* ${formData.customer_cep}\n*Bairro:* ${selectedNeighborhood?.name}\n*Tempo Estimado:* ~${estimatedTime} min`
         : `*Horário de Retirada:* ${formData.scheduled_time}`;
 
       const message = encodeURIComponent(
@@ -228,23 +229,37 @@ export default function CheckoutPage() {
                 </div>
               ) : (
                 <div className="space-y-4 animate-in fade-in duration-300">
-                  <div className="space-y-2">
-                    <Label>Bairro *</Label>
-                    <Select 
-                      value={formData.neighborhood_id} 
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood_id: value }))}
-                    >
-                      <SelectTrigger className={errors.neighborhood_id || errors.delivery_method ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Selecione seu bairro" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableNeighborhoods.map(n => (
-                          <SelectItem key={n.id} value={n.id}>
-                            {n.name} ({formatCurrency(n.delivery_fee)})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="customer_cep">CEP *</Label>
+                      <Input
+                        id="customer_cep"
+                        name="customer_cep"
+                        value={formData.customer_cep}
+                        onChange={handleChange}
+                        placeholder="00000-000"
+                        className={errors.customer_cep ? 'border-destructive' : ''}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Bairro *</Label>
+                      <Select 
+                        value={formData.neighborhood_id} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood_id: value }))}
+                      >
+                        <SelectTrigger className={errors.neighborhood_id || errors.delivery_method ? 'border-destructive' : ''}>
+                          <SelectValue placeholder="Selecione seu bairro" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableNeighborhoods.map(n => (
+                            <SelectItem key={n.id} value={n.id}>
+                              {n.name} ({formatCurrency(n.delivery_fee)})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-2">

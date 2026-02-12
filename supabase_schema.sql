@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS orders (
     customer_name TEXT NOT NULL,
     customer_phone TEXT NOT NULL,
     customer_address TEXT,
+    customer_cep TEXT,
+    neighborhood_id UUID REFERENCES neighborhoods(id),
     delivery_fee DECIMAL(10,2) DEFAULT 0,
     observations TEXT,
     status order_status DEFAULT 'pending',
@@ -100,6 +102,8 @@ CREATE TABLE IF NOT EXISTS system_settings (
     max_delivery_km DECIMAL(10,2) DEFAULT 10,
     pix_key TEXT,
     is_open BOOLEAN DEFAULT true,
+    store_address TEXT,
+    store_cep TEXT,
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -110,8 +114,8 @@ CREATE TABLE IF NOT EXISTS user_roles (
 );
 
 -- 3. Initial Data
-INSERT INTO system_settings (id, min_production_time, max_delivery_km, is_open)
-VALUES ('global', 30, 10, true)
+INSERT INTO system_settings (id, min_production_time, max_delivery_km, is_open, store_address, store_cep)
+VALUES ('global', 30, 10, true, 'Rua das Flores, 123 - Centro', '65000-000')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO categories (name) VALUES 
