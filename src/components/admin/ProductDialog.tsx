@@ -361,29 +361,29 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 bg-muted/10 hover:bg-muted/20 transition-all relative group">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={handleFileUpload}
-                  disabled={isUploading}
-                />
-                {isUploading ? (
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="mt-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest">Enviando...</p>
+            <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 bg-muted/10 hover:bg-muted/20 transition-all relative group cursor-pointer min-h-[120px]">
+              <Input
+                type="file"
+                accept="image/*"
+                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+              />
+              {isUploading ? (
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="mt-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest">Enviando...</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-3 bg-primary/5 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                    <Upload className="h-5 w-5 text-primary" />
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center text-center">
-                    <div className="p-3 bg-primary/5 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                      <Upload className="h-5 w-5 text-primary" />
-                    </div>
-                    <p className="font-black text-[10px] uppercase tracking-widest mb-1">Subir Foto</p>
-                    <p className="text-[9px] text-muted-foreground">JPG, PNG, WebP</p>
-                  </div>
-                )}
-              </div>
+                  <p className="font-black text-[10px] uppercase tracking-widest mb-1 text-primary underline">Subir Foto</p>
+                  <p className="text-[9px] text-muted-foreground">JPG, PNG, WebP</p>
+                </div>
+              )}
+            </label>
             )}
             {errors.image_url && <p className="text-[10px] text-destructive font-bold uppercase">{errors.image_url}</p>}
           </div>
