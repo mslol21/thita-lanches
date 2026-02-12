@@ -1,4 +1,4 @@
-import { Save, Settings2, Clock, Map, CreditCard, DoorOpen } from 'lucide-react';
+import { Save, Settings2, Clock, Map, MapPin, CreditCard, DoorOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
