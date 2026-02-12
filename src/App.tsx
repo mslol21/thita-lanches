@@ -23,7 +23,7 @@ const App = () => (
       <CartProvider>
         <TooltipProvider>
           <Toaster />
-          <Sonner />
+          <Sonner position="top-center" richColors closeButton />
           <BrowserRouter>
             <Routes>
               {/* Customer Routes */}

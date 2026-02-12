@@ -135,10 +135,9 @@ export default function CheckoutPage() {
 
             if (dist > settings.max_delivery_km) {
               setOutOfRange(true);
-              toast.error(`Fora da área de cobertura! Distância de ${dist.toFixed(1)}km (Limite: ${settings.max_delivery_km}km).`);
+              toast.error(`Fora da área de cobertura (${dist.toFixed(1)}km).`);
             } else {
               setOutOfRange(false);
-              toast.success(`Endereço validado! Distância: ${dist.toFixed(1)}km.`);
             }
           } else {
             // Se geocodificação falhar mas a cidade coincidiu no ViaCEP, podemos ser mais tolerantes?
