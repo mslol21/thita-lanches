@@ -20,8 +20,9 @@ export function useUpdateSettings() {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
       toast.success('Configurações atualizadas com sucesso!');
     },
-    onError: () => {
-      toast.error('Erro ao atualizar configurações.');
+    onError: (error: any) => {
+      console.error('Erro ao atualizar configurações:', error);
+      toast.error('Erro ao atualizar configurações: ' + (error.message || 'Erro desconhecido'));
     },
   });
 }

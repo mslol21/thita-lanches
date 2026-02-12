@@ -361,26 +361,34 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                 </Button>
               </div>
             ) : (
-            <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 bg-muted/10 hover:bg-muted/20 transition-all relative group cursor-pointer min-h-[120px]">
-              <Input
+            <label 
+              htmlFor="product-image-upload"
+              className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 bg-muted/10 hover:bg-muted/20 transition-all relative group cursor-pointer min-h-[140px]"
+            >
+              <input
+                id="product-image-upload"
                 type="file"
                 accept="image/*"
-                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                onChange={handleFileUpload}
+                className="absolute inset-0 opacity-0 cursor-pointer z-20 w-full h-full"
+                onChange={(e) => {
+                  console.log("Arquivo selecionado!");
+                  handleFileUpload(e);
+                }}
                 disabled={isUploading}
               />
               {isUploading ? (
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center z-10">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   <p className="mt-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest">Enviando...</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center text-center">
+                <div className="flex flex-col items-center text-center z-10">
                   <div className="p-3 bg-primary/5 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                    <Upload className="h-5 w-5 text-primary" />
+                    <Upload className="h-6 w-6 text-primary" />
                   </div>
-                  <p className="font-black text-[10px] uppercase tracking-widest mb-1 text-primary underline">Subir Foto</p>
-                  <p className="text-[9px] text-muted-foreground">JPG, PNG, WebP</p>
+                  <p className="font-black text-xs uppercase tracking-widest mb-1 text-primary">Subir Foto</p>
+                  <p className="text-[10px] text-muted-foreground font-bold">Clique aqui ou arraste a imagem</p>
+                  <p className="text-[9px] text-muted-foreground mt-1">JPG, PNG, WebP</p>
                 </div>
               )}
             </label>
