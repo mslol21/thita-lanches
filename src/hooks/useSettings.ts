@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { settingsService } from '@/services/settings.service';
 import { SystemSettings } from '@/types';
+import { auth } from '@/integrations/firebase/config';
 import { toast } from 'sonner';
 
 export function useSettings() {
@@ -22,7 +23,8 @@ export function useUpdateSettings() {
     },
     onError: (error: any) => {
       console.error('Erro ao atualizar configurações:', error);
-      toast.error('Erro ao atualizar configurações: ' + (error.message || 'Erro desconhecido'));
+      const email = auth.currentUser?.email;
+      toast.error(`Erro ao atualizar: ${error.message}${email ? ` (Logado como: ${email})` : ''}`);
     },
   });
 }

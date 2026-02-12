@@ -105,9 +105,10 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
       setFormData(prev => ({ ...prev, image_url: url }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading file:', error);
-      setErrors({ image_url: 'Erro ao fazer upload da imagem.' });
+      const email = auth.currentUser?.email;
+      setErrors({ image_url: `Erro ao fazer upload: ${error.message}${email ? ` (Logado como: ${email})` : ''}` });
     } finally {
       setIsUploading(false);
     }
