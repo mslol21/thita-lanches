@@ -5,10 +5,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
-import { useOrder } from '@/hooks/useOrders';
+import { useOrder, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { Order } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquare, Globe, Store, ShoppingBag, MapPin, Phone, Clock, FileText, Printer } from 'lucide-react';
+import { MessageSquare, Globe, Store, ShoppingBag, MapPin, Phone, Clock, FileText, Printer, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -20,6 +20,7 @@ interface OrderDetailDialogProps {
 
 export function OrderDetailDialog({ order, open, onOpenChange }: OrderDetailDialogProps) {
   const { data: orderDetails, isLoading } = useOrder(order?.id || '');
+  const updateStatus = useUpdateOrderStatus();
 
   const formatPrice = (price: number) => {
     return price.toLocaleString('pt-BR', {
@@ -39,6 +40,19 @@ export function OrderDetailDialog({ order, open, onOpenChange }: OrderDetailDial
 
   const handlePrint = () => {
     toast.info("Iniciando impressão...");
+  };
+
+  const handleCancelOrder = () => {
+    if (orderDetails && confirm('Tem certeza que deseja cancelar este pedido?')) {
+      updateStatus.mutate({ 
+        order: orderDetails as Order, 
+        status: 'cancelled' 
+      }, {
+        onSuccess: () => {
+          onOpenChange(false);
+        }
+      });
+    }
   };
 
   return (
@@ -141,11 +155,21 @@ export function OrderDetailDialog({ order, open, onOpenChange }: OrderDetailDial
                   <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Líquido</p>
                   <p className="text-4xl font-black text-primary leading-none mt-1">{formatPrice(orderDetails.total_price)}</p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex items-center gap-2">
                   <Button onClick={handlePrint} className="gap-2 font-black uppercase text-[10px] tracking-widest h-12 px-6 shadow-lg shadow-primary/20">
                     <Printer className="h-4 w-4" />
                     Imprimir Ticket
                   </Button>
+                  {orderDetails.status !== 'delivered' && orderDetails.status !== 'cancelled' && (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleCancelOrder} 
+                      className="gap-2 font-black uppercase text-[10px] tracking-widest h-12 px-6 border-destructive/20 text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Cancelar
+                    </Button>
+                  )}
                 </div>
               </div>
 

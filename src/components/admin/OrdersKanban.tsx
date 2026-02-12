@@ -12,7 +12,8 @@ import {
   Banknote,
   QrCode,
   AlertCircle,
-  Printer
+  Printer,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,6 +59,12 @@ export function OrdersKanban({ orders }: OrdersKanbanProps) {
     const nextStatus = statusMap[order.status];
     if (nextStatus) {
       updateStatus.mutate({ order, status: nextStatus });
+    }
+  };
+
+  const handleCancel = (order: Order) => {
+    if (confirm(`Deseja realmente cancelar o pedido #${order.id.slice(0, 4)}?`)) {
+      updateStatus.mutate({ order, status: 'cancelled' });
     }
   };
 
@@ -117,6 +124,19 @@ export function OrdersKanban({ orders }: OrdersKanbanProps) {
                             >
                               <Printer className="h-3.5 w-3.5" />
                             </Button>
+                            {order.status !== 'cancelled' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancel(order);
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
                             {order.origin === 'whatsapp' ? (
                               <MessageSquare className="h-4 w-4 text-[#25D366] fill-none" />
                             ) : order.origin === 'balcao' ? (
