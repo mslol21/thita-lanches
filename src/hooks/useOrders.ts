@@ -7,7 +7,9 @@ import { openWhatsApp } from '@/lib/whatsapp';
 interface CreateOrderData {
   customer_name: string;
   customer_phone: string;
-  customer_address: string;
+  customer_address?: string;
+  scheduled_time?: string;
+  delivery_method?: 'entrega' | 'retirada';
   observations?: string;
   items: CartItem[];
   origin?: 'whatsapp' | 'site' | 'balcao' | 'ifood';

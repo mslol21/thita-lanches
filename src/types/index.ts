@@ -22,7 +22,7 @@ export interface CartItem {
   quantity: number;
 }
 
-export type OrderStatus = 'pending_payment' | 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending_payment' | 'pending' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
 
 export interface Order {
   id: string;
@@ -38,7 +38,7 @@ export interface Order {
   created_at: string;
   updated_at: string;
   user_id: string | null;
-  origin: 'site' | 'balcao';
+  origin: 'site' | 'balcao' | 'whatsapp' | 'ifood';
   payment_method: 'pix' | 'dinheiro' | 'cartao';
   payment_status: 'pending' | 'paid';
   delivery_method: 'entrega' | 'retirada';

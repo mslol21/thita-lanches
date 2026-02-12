@@ -54,11 +54,23 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // 5. Papéis de Usuário:
+    // 5. Bairros e Taxas: Público pode ler, apenas Admin altera
+    match /neighborhoods/{neighborhoodId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 6. Papéis de Usuário:
     // - Segurança máxima: Apenas o sistema ou o próprio usuário lê (Admin gerencia no console)
     match /user_roles/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow write: if false; // Alterações de admin devem ser feitas via Console ou Functions
+    }
+
+    // 7. Configurações: Público pode ler, apenas Admin altera
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

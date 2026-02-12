@@ -31,6 +31,6 @@ export const settingsService = {
 
   async updateSettings(settings: Partial<SystemSettings>): Promise<void> {
     const docRef = doc(db, "settings", SETTINGS_DOC_ID);
-    await updateDoc(docRef, settings);
+    await setDoc(docRef, settings, { merge: true });
   }
 };
