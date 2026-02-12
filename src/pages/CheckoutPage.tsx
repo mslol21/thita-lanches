@@ -60,6 +60,7 @@ export default function CheckoutPage() {
     const cep = formData.customer_cep?.replace(/\D/g, '');
     if (cep && cep.length === 8 && settings) {
       setIsCEPTitle(true);
+      setOutOfRange(true); // Bloqueia preventivamente até validar
       
       const checkCoverage = async () => {
         try {
@@ -72,28 +73,52 @@ export default function CheckoutPage() {
             return;
           }
 
+          // Atualiza endereço e bairro
           setFormData(prev => ({
             ...prev,
             customer_address: data.logradouro,
             customer_neighborhood: data.bairro || '',
           }));
 
-          // 2. Verificar distância (Geocoding)
-          // Store Coordinates
-          const storeRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(settings.store_address || '')}&limit=1`, {
-            headers: { 'User-Agent': 'TalitaPinhaApp' }
-          });
-          const storeData = await storeRes.json();
+          // 2. Verificação de Cidade (Filtro Primário)
+          const customerCity = data.localidade?.toLowerCase();
+          const customerUF = data.uf?.toLowerCase();
           
-          // Customer Coordinates
-          const custRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${cep},Brazil&limit=1`, {
-            headers: { 'User-Agent': 'TalitaPinhaApp' }
-          });
+          // Tentar extrair cidade da loja (Formato: Rua, Bairro - Cidade/UF)
+          const storeParts = settings.store_address?.split('-').pop()?.split('/') || [];
+          const storeCity = storeParts[0]?.trim().toLowerCase();
+          const storeUF = storeParts[1]?.trim().toLowerCase();
+
+          // Se a cidade da loja estiver definida e for diferente da do CEP
+          if (storeCity && customerCity && storeCity !== customerCity) {
+            toast.error(`Atenção: Este CEP pertence a ${data.localidade}-${data.uf}. Nossa loja está em ${storeCity.toUpperCase()}.`, {
+              duration: 6000
+            });
+            setOutOfRange(true);
+            setIsCEPTitle(false);
+            return;
+          }
+
+          // 3. Verificar distância (Geocoding) - Filtro Secundário
+          // Buscamos com cidade e estado para garantir precisão
+          const storeQuery = encodeURIComponent(`${settings.store_address}`);
+          const custQuery = encodeURIComponent(`${cep}, ${data.localidade}, ${data.uf}, Brazil`);
+
+          const [storeRes, custRes] = await Promise.all([
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${storeQuery}&limit=1`, {
+              headers: { 'User-Agent': 'TalitaPinhaApp/1.0' }
+            }),
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${custQuery}&limit=1`, {
+              headers: { 'User-Agent': 'TalitaPinhaApp/1.0' }
+            })
+          ]);
+
+          const storeData = await storeRes.json();
           const custData = await custRes.json();
 
           if (storeData.length > 0 && custData.length > 0) {
             const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-              const R = 6371;
+              const R = 6371; // km
               const dLat = (lat2 - lat1) * Math.PI / 180;
               const dLon = (lon2 - lon1) * Math.PI / 180;
               const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -110,16 +135,20 @@ export default function CheckoutPage() {
 
             if (dist > settings.max_delivery_km) {
               setOutOfRange(true);
-              toast.error(`Fora da área de cobertura! Infelizmente não realizamos entrega nesta distância (${dist.toFixed(1)}km).`, {
-                duration: 5000
-              });
+              toast.error(`Fora da área de cobertura! Distância de ${dist.toFixed(1)}km (Limite: ${settings.max_delivery_km}km).`);
             } else {
               setOutOfRange(false);
-              toast.success(`Endereço dentro da área de cobertura (${dist.toFixed(1)}km)!`);
+              toast.success(`Endereço validado! Distância: ${dist.toFixed(1)}km.`);
             }
+          } else {
+            // Se geocodificação falhar mas a cidade coincidiu no ViaCEP, podemos ser mais tolerantes?
+            // O usuário quer rigor, então vamos avisar.
+            setOutOfRange(true);
+            toast.error('Não conseguimos calcular a distância exata. Verifique o endereço.');
           }
         } catch (err) {
-          console.error('Erro na busca de cobertura:', err);
+          console.error('Erro na validação:', err);
+          toast.error('Erro ao validar endereço. Tente novamente.');
         } finally {
           setIsCEPTitle(false);
         }
