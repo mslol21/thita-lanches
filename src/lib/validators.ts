@@ -3,11 +3,22 @@ import { z } from 'zod';
 export const checkoutSchema = z.object({
   customer_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
   customer_phone: z.string().min(10, 'WhatsApp inválido').max(20),
-  scheduled_time: z.string().min(1, 'Selecione um horário para retirada'),
+  delivery_method: z.enum(['entrega', 'retirada']),
+  scheduled_time: z.string().optional(),
+  customer_address: z.string().optional(),
+  neighborhood_id: z.string().optional(),
   observations: z.string().max(500).optional(),
   payment_method: z.enum(['cartao', 'dinheiro', 'pix'], {
     required_error: 'Selecione uma forma de pagamento',
   }),
+}).refine((data) => {
+  if (data.delivery_method === 'entrega') {
+    return !!data.customer_address && !!data.neighborhood_id;
+  }
+  return !!data.scheduled_time;
+}, {
+  message: "Preencha os campos obrigatórios",
+  path: ["delivery_method"]
 });
 
 export const productSchema = z.object({

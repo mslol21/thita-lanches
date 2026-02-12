@@ -91,9 +91,10 @@ export const orderService = {
       .update({ status: status as any, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
-      .single();
+      .maybeSingle();
     
     if (error) throw error;
+    if (!data) throw new Error("Não foi possível atualizar o pedido. Verifique suas permissões.");
     return data as Order;
   },
 

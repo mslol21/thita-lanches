@@ -61,8 +61,10 @@ export function useUpdateOrderStatus() {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success('Status atualizado com sucesso!');
       
-      // Auto WhatsApp for status change
-      if (variables.order.customer_phone && (variables.order.origin === 'site' || variables.order.origin === 'whatsapp')) {
+      // Auto WhatsApp Apenas quando estiver Pronto ou Saiu para Entrega
+      if (variables.order.customer_phone && 
+         (variables.order.origin === 'site' || variables.order.origin === 'whatsapp') &&
+         (variables.status === 'ready' || variables.status === 'out_for_delivery')) {
         openWhatsApp(variables.order, variables.status);
       }
     },
