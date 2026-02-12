@@ -1,89 +1,73 @@
-import { db } from '@/integrations/firebase/config';
-import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  orderBy,
-  Timestamp,
-  writeBatch,
-  serverTimestamp 
-} from "firebase/firestore";
+import { supabase } from "@/integrations/supabase/client";
 import { Product } from '@/types';
 
 export const productService = {
   async getProducts(): Promise<Product[]> {
-    const productsCol = collection(db, "products");
-    const q = query(productsCol, orderBy("name"));
-    const snapshot = await getDocs(q);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name');
     
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        created_at: data.created_at?.toDate()?.toISOString() || new Date().toISOString(),
-        updated_at: data.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
-      } as Product;
-    });
+    if (error) throw error;
+    return data as Product[];
   },
 
   async createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
-    const productsCol = collection(db, "products");
-    
-    // Filter out undefined values and convert them to null for Firestore compatibility
-    const productData = Object.fromEntries(
-      Object.entries(product).map(([key, value]) => [key, value === undefined ? null : value])
-    );
-    
-    const docRef = await addDoc(productsCol, {
-      ...productData,
-      created_at: serverTimestamp(),
-      updated_at: serverTimestamp()
-    });
+    const { data, error } = await supabase
+      .from('products')
+      .insert([product])
+      .select()
+      .single();
 
-    return {
-      id: docRef.id,
-      ...product,
-      image_url: product.image_url ?? null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    } as Product;
+    if (error) throw error;
+    return data as Product;
   },
 
   async updateProduct(id: string, product: Partial<Product>): Promise<Product> {
-    const docRef = doc(db, "products", id);
-    
-    // Filter out undefined values and convert them to null for Firestore compatibility
-    const productData = Object.fromEntries(
-      Object.entries(product).map(([key, value]) => [key, value === undefined ? null : value])
-    );
-    
-    await updateDoc(docRef, {
-      ...productData,
-      updated_at: serverTimestamp()
-    });
+    const { data, error } = await supabase
+      .from('products')
+      .update(product)
+      .eq('id', id)
+      .select()
+      .single();
 
-    return { id, ...product } as Product;
+    if (error) throw error;
+    return data as Product;
   },
 
   async deleteProduct(id: string): Promise<void> {
-    const docRef = doc(db, "products", id);
-    await deleteDoc(docRef);
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  async uploadImage(file: File): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('products')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('products')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
   },
 
   async deleteAllProducts(): Promise<void> {
-    const productsCol = collection(db, "products");
-    const snapshot = await getDocs(productsCol);
-    const batch = writeBatch(db);
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
     
-    snapshot.docs.forEach(doc => {
-      batch.delete(doc.ref);
-    });
-
-    await batch.commit();
+    if (error) throw error;
   }
 };

@@ -1,20 +1,17 @@
-import { db } from '@/integrations/firebase/config';
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc 
-} from "firebase/firestore";
+import { supabase } from "@/integrations/supabase/client";
 import { SystemSettings } from '@/types';
 
-const SETTINGS_DOC_ID = 'global';
+const SETTINGS_ID = 'global';
 
 export const settingsService = {
   async getSettings(): Promise<SystemSettings> {
-    const docRef = doc(db, "settings", SETTINGS_DOC_ID);
-    const snapshot = await getDoc(docRef);
+    const { data, error } = await supabase
+      .from('system_settings' as any)
+      .select('*')
+      .eq('id', SETTINGS_ID)
+      .single();
     
-    if (!snapshot.exists()) {
+    if (error) {
       // Configurações padrão caso não existam
       const defaultSettings: SystemSettings = {
         min_production_time: 30,
@@ -22,15 +19,21 @@ export const settingsService = {
         pix_key: '',
         is_open: true
       };
-      await setDoc(docRef, defaultSettings);
       return defaultSettings;
     }
     
-    return snapshot.data() as SystemSettings;
+    return data as unknown as SystemSettings;
   },
 
   async updateSettings(settings: Partial<SystemSettings>): Promise<void> {
-    const docRef = doc(db, "settings", SETTINGS_DOC_ID);
-    await setDoc(docRef, settings, { merge: true });
+    const { error } = await supabase
+      .from('system_settings' as any)
+      .upsert({ 
+        id: SETTINGS_ID, 
+        ...settings,
+        updated_at: new Date().toISOString()
+      });
+    
+    if (error) throw error;
   }
 };

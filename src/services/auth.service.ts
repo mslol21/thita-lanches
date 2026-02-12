@@ -1,64 +1,84 @@
-import { 
-  signInWithPopup, 
-  signOut as firebaseSignOut, 
-  onAuthStateChanged,
-  User,
-  signInWithEmailAndPassword
-} from "firebase/auth";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import { auth, googleProvider, db } from "@/integrations/firebase/config";
+import { User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 export const authService = {
   async signInWithGoogle() {
     try {
-      console.log("Iniciando Login Google...");
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log("Login Google bem-sucedido:", result.user.email);
-      return result;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error("Erro detalhado no Google Auth:", error);
+      console.error("Erro no Supabase Google Auth:", error);
       throw error;
     }
   },
 
-
   async signInWithEmail(email: string, pass: string) {
-    return await signInWithEmailAndPassword(auth, email, pass);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: pass,
+    });
+    if (error) throw error;
+    return data;
   },
 
   async signOut() {
-    return await firebaseSignOut(auth);
+    return await supabase.auth.signOut();
   },
 
   async checkAdminRole(userId: string): Promise<boolean> {
-    const docRef = doc(db, "user_roles", userId);
-    const docSnap = await getDoc(docRef);
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
     
-    if (docSnap.exists()) {
-      return docSnap.data().role === 'admin';
-    }
-    return false;
+    if (error || !data) return false;
+    return data.role === 'admin';
   },
 
   onAuthStateChange(callback: (user: User | null) => void) {
-    return onAuthStateChanged(auth, callback);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      callback(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
   },
 
   onAdminRoleChange(userId: string, callback: (isAdmin: boolean) => void) {
-    // Backdoor seguro: Garante que o usuário principal sempre tenha acesso
-    const currentUser = auth.currentUser;
-    if (currentUser && currentUser.email === 'admin@talita.com') {
-      callback(true);
-      return () => {};
-    }
-
-    const docRef = doc(db, "user_roles", userId);
-    return onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        callback(snapshot.data().role === 'admin');
-      } else {
-        callback(false);
+    // Backdoor seguro: Garante que o usuário logado com o e-mail admin tenha acesso
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user && user.email === 'admin@talita.com') {
+        callback(true);
       }
     });
+
+    // Listener para mudanças na tabela user_roles
+    const channel = supabase
+      .channel('admin_role_check')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles',
+          filter: `user_id=eq.${userId}`
+        },
+        (payload: any) => {
+          callback(payload.new?.role === 'admin');
+        }
+      )
+      .subscribe();
+
+    // Check inicial
+    this.checkAdminRole(userId).then(callback);
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }
 };

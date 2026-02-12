@@ -1,57 +1,36 @@
-import { db, auth } from '@/integrations/firebase/config';
-import { 
-  collection, 
-  getDocs, 
-  getDoc,
-  addDoc, 
-  updateDoc, 
-  doc, 
-  query, 
-  where,
-  orderBy,
-  writeBatch,
-  serverTimestamp 
-} from "firebase/firestore";
+import { supabase } from "@/integrations/supabase/client";
 import { CartItem, Order, OrderStatus, OrderWithItems, OrderItem } from '@/types';
 
 export const orderService = {
   async getOrders(): Promise<Order[]> {
-    const ordersCol = collection(db, "orders");
-    const q = query(ordersCol, orderBy("created_at", "desc"));
-    const snapshot = await getDocs(q);
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
     
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      created_at: doc.data().created_at?.toDate()?.toISOString(),
-      updated_at: doc.data().updated_at?.toDate()?.toISOString(),
-    } as Order));
+    if (error) throw error;
+    return data as Order[];
   },
 
   async getOrderById(id: string): Promise<OrderWithItems> {
-    const docRef = doc(db, "orders", id);
-    const docSnap = await getDoc(docRef);
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    if (!docSnap.exists()) throw new Error("Pedido não encontrado");
+    if (orderError) throw orderError;
     
-    const orderData = docSnap.data();
+    const { data: items, error: itemsError } = await supabase
+      .from('order_items')
+      .select('*, product:products(*)')
+      .eq('order_id', id);
     
-    // Get items
-    const itemsCol = collection(db, "order_items");
-    const q = query(itemsCol, where("order_id", "==", id));
-    const itemsSnapshot = await getDocs(q);
-    
-    const items = itemsSnapshot.docs.map(itemDoc => ({
-      id: itemDoc.id,
-      ...itemDoc.data()
-    } as OrderItem));
+    if (itemsError) throw itemsError;
 
     return {
-      id: docSnap.id,
-      ...orderData,
-      created_at: orderData.created_at?.toDate()?.toISOString(),
-      updated_at: orderData.updated_at?.toDate()?.toISOString(),
-      items
+      ...order,
+      items: items as any[]
     } as OrderWithItems;
   },
 
@@ -66,86 +45,64 @@ export const orderService = {
     origin?: 'whatsapp' | 'site' | 'balcao' | 'ifood';
     payment_method?: 'cartao' | 'dinheiro' | 'pix';
   }): Promise<Order> {
-    const batch = writeBatch(db);
-    
-    // Calculate total on frontend (Note: In production, use Cloud Functions for security)
     const totalPrice = data.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
     
-    const orderRef = doc(collection(db, "orders"));
-    const orderData = {
-      customer_name: data.customer_name,
-      customer_phone: data.customer_phone,
-      customer_address: data.customer_address || null,
-      scheduled_time: data.scheduled_time || null,
-      delivery_method: data.delivery_method || 'retirada',
-      delivery_fee: 0,
-      observations: data.observations || null,
-      total_price: totalPrice,
-      status: 'pending' as OrderStatus,
-      origin: data.origin || 'site',
-      payment_method: data.payment_method || 'cartao',
-      payment_status: 'pending' as const,
-      user_id: auth.currentUser?.uid || null,
-      created_at: serverTimestamp(),
-      updated_at: serverTimestamp()
-    };
+    // 1. Create Order
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert([{
+        customer_name: data.customer_name,
+        customer_phone: data.customer_phone,
+        customer_address: data.customer_address || null,
+        scheduled_time: data.scheduled_time || null,
+        delivery_method: data.delivery_method || 'retirada',
+        observations: data.observations || null,
+        total_price: totalPrice,
+        status: 'pending',
+        origin: data.origin || 'site',
+        payment_method: data.payment_method || 'cartao',
+        payment_status: 'pending'
+      }])
+      .select()
+      .single();
+
+    if (orderError) throw orderError;
+
+    // 2. Create Order Items
+    const orderItems = data.items.map(item => ({
+      order_id: order.id,
+      product_id: item.product.id,
+      quantity: item.quantity,
+      price: item.product.price
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+
+    if (itemsError) throw itemsError;
     
-    batch.set(orderRef, orderData);
-    
-    // Add items
-    data.items.forEach(item => {
-      const itemRef = doc(collection(db, "order_items"));
-      batch.set(itemRef, {
-        order_id: orderRef.id,
-        product_id: item.product.id,
-        product: {
-          name: item.product.name,
-          price: item.product.price
-        },
-        quantity: item.quantity,
-        price: item.product.price,
-        created_at: serverTimestamp()
-      });
-    });
-    
-    await batch.commit();
-    
-    return {
-      id: orderRef.id,
-      ...orderData,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    } as unknown as Order;
+    return order as Order;
   },
 
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
-    const docRef = doc(db, "orders", id);
-    await updateDoc(docRef, {
-      status,
-      updated_at: serverTimestamp()
-    });
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status: status as any, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
     
-    const updatedSnap = await getDoc(docRef);
-    return { id, ...updatedSnap.data() } as Order;
+    if (error) throw error;
+    return data as Order;
   },
 
   async deleteAllOrders(): Promise<void> {
-    const ordersCol = collection(db, "orders");
-    const snapshot = await getDocs(ordersCol);
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
     
-    const itemsCol = collection(db, "order_items");
-    const itemsSnapshot = await getDocs(itemsCol);
-
-    const batch = writeBatch(db);
-    
-    snapshot.docs.forEach(doc => {
-      batch.delete(doc.ref);
-    });
-
-    itemsSnapshot.docs.forEach(doc => {
-      batch.delete(doc.ref);
-    });
-
-    await batch.commit();
+    if (error) throw error;
   }
 };

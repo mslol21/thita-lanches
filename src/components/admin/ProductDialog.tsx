@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Loader2, Upload, X, ImageIcon, Tag, Plus, Sparkles } from 'lucide-react';
 import { PRODUCT_ICONS, getProductIcon } from '@/lib/product-icons';
-import { storage } from '@/integrations/firebase/config';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { productService } from '@/services/product.service';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -101,13 +101,12 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     setErrors({});
 
     try {
-      const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const url = await productService.uploadImage(file);
       setFormData(prev => ({ ...prev, image_url: url }));
     } catch (error: any) {
       console.error('Error uploading file:', error);
-      const email = auth.currentUser?.email;
+      const { data: { user } } = await supabase.auth.getUser();
+      const email = user?.email;
       setErrors({ image_url: `Erro ao fazer upload: ${error.message}${email ? ` (Logado como: ${email})` : ''}` });
     } finally {
       setIsUploading(false);
@@ -146,8 +145,8 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         await createProduct.mutateAsync(data);
       }
       onOpenChange(false);
-    } catch {
-      // Error handled by mutation
+    } catch (error) {
+      console.error('Submit error:', error);
     }
   };
 
@@ -429,4 +428,3 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
     </Dialog>
   );
 }
-

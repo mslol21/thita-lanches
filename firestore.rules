@@ -1,9 +1,7 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Funções auxiliares para legibilidade
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -11,66 +9,45 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'admin@talita.com' ||
-        (exists(/databases/$(database)/documents/user_roles/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role == 'admin')
+        exists(/databases/$(database)/documents/user_roles/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role == 'admin'
       );
     }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
 
-    // 1. Produtos: Público pode ler, apenas Admin altera
     match /products/{productId} {
-      allow read: if resource.data.available == true || isAdmin();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    // 2. Pedidos: 
-    // - Qualquer um pode criar (para pedidos sem login)
-    // - Cliente logado vê apenas os seus
-    // - Admin vê tudo
-    // - Público pode ler via ID (tracking secreto via UUID)
     match /orders/{orderId} {
       allow create: if true; 
-      allow read: if isAdmin() || 
-                     (resource.data.user_id != null && isOwner(resource.data.user_id)) ||
-                     true; // Mantendo true para permitir tracking por ID (UUID)
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read: if true;
+      allow update, delete: if isAdmin();
     }
 
-    // 3. Itens do Pedido:
-    // - Segue a lógica de acesso do pedido pai
     match /order_items/{itemId} {
-      allow create: if true;
-      allow read: if true; // No Firestore NoSQL, o acesso é via query filtrada no código
+      allow create, read: if true;
       allow write: if isAdmin();
     }
 
-    // 4. Categorias: Público pode ler, apenas Admin altera
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // 5. Bairros e Taxas: Público pode ler, apenas Admin altera
     match /neighborhoods/{neighborhoodId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // 6. Papéis de Usuário:
-    // - Segurança máxima: Apenas o sistema ou o próprio usuário lê (Admin gerencia no console)
-    match /user_roles/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow write: if false; // Alterações de admin devem ser feitas via Console ou Functions
-    }
-
-    // 7. Configurações: Público pode ler, apenas Admin altera
     match /settings/{docId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    match /user_roles/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if false;
     }
   }
 }
