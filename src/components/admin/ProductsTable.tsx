@@ -30,6 +30,7 @@ import {
 import { ProductDialog } from './ProductDialog';
 import { useDeleteProduct, useUpdateProduct } from '@/hooks/useProducts';
 import { Product } from '@/types';
+import { toast } from 'sonner';
 
 interface ProductsTableProps {
   products: Product[];
@@ -50,8 +51,16 @@ export function ProductsTable({ products }: ProductsTableProps) {
 
   const handleDelete = async () => {
     if (deleteProduct) {
-      await deleteProductMutation.mutateAsync(deleteProduct.id);
-      setDeleteProduct(null);
+      try {
+        await deleteProductMutation.mutateAsync(deleteProduct.id);
+        setDeleteProduct(null);
+      } catch (error: any) {
+        if (error.code === '23503') { // Foreign key constraint error
+          toast.error(`Não é possível excluir "${deleteProduct.name}" porque ele já foi vendido em algum pedido. Recomendamos desativar o produto em vez de excluir.`);
+        } else {
+          toast.error('Erro ao excluir produto: ' + (error.message || 'Erro desconhecido'));
+        }
+      }
     }
   };
 

@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES products(id),
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
     quantity INTEGER NOT NULL DEFAULT 1,
     price DECIMAL(10,2) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now()
