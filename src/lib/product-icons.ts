@@ -27,6 +27,7 @@ import {
   ChefHat,
   Utensils,
   UtensilsCrossed,
+  CupSoda,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -49,6 +50,8 @@ export const PRODUCT_ICONS: ProductIcon[] = [
   
   // Bebidas
   { name: 'coffee', icon: Coffee, label: 'Café', category: 'Bebidas' },
+  { name: 'soda', icon: CupSoda, label: 'Refrigerante', category: 'Bebidas' },
+  { name: 'juice', icon: Citrus, label: 'Suco', category: 'Bebidas' },
   { name: 'beer', icon: Beer, label: 'Cerveja', category: 'Bebidas' },
   { name: 'wine', icon: Wine, label: 'Vinho', category: 'Bebidas' },
   { name: 'glass-water', icon: GlassWater, label: 'Água', category: 'Bebidas' },

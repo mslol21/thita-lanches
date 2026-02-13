@@ -34,7 +34,11 @@ export function useDeleteCategory() {
       toast.success('Categoria excluída com sucesso!');
     },
     onError: (error: any) => {
-      toast.error('Erro ao excluir categoria: ' + error.message);
+      if (error.code === '23503') {
+        toast.error('Não é possível excluir esta categoria pois existem produtos vinculados a ela. Mova os produtos para outra categoria primeiro.');
+      } else {
+        toast.error('Erro ao excluir categoria: ' + error.message);
+      }
     },
   });
 }
