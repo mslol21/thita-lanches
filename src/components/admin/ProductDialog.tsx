@@ -81,12 +81,12 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         price: '',
         image_url: '',
         icon: '',
-        category: 'Lanches',
+        category: categories.length > 0 ? categories[0].name : '',
         available: true,
       });
     }
     setErrors({});
-  }, [product, open]);
+  }, [product, open, categories]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -199,10 +199,13 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                             if (e.key === 'Enter') {
                               e.preventDefault();
                               if (newCategoryName.trim()) {
-                                createCategory.mutate(newCategoryName.trim());
-                                setFormData(prev => ({ ...prev, category: newCategoryName.trim() }));
-                                setNewCategoryName('');
-                                setShowAddCategory(false);
+                                createCategory.mutate(newCategoryName.trim(), {
+                                  onSuccess: (newCat: any) => {
+                                    setFormData(prev => ({ ...prev, category: newCat.name }));
+                                    setNewCategoryName('');
+                                    setShowAddCategory(false);
+                                  }
+                                });
                               }
                             }
                           }}
@@ -213,10 +216,13 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                           className="h-8 px-2"
                           onClick={() => {
                             if (newCategoryName.trim()) {
-                              createCategory.mutate(newCategoryName.trim());
-                              setFormData(prev => ({ ...prev, category: newCategoryName.trim() }));
-                              setNewCategoryName('');
-                              setShowAddCategory(false);
+                              createCategory.mutate(newCategoryName.trim(), {
+                                onSuccess: (newCat: any) => {
+                                  setFormData(prev => ({ ...prev, category: newCat.name }));
+                                  setNewCategoryName('');
+                                  setShowAddCategory(false);
+                                }
+                              });
                             }
                           }}
                         >
@@ -244,15 +250,25 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
                       </Button>
                     )}
                   </div>
-                  {(() => {
-                    const allCategories = Array.from(new Set([
-                      ...DEFAULT_CATEGORIES,
-                      ...categories.map(c => c.name)
-                    ]));
-                    return allCategories.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ));
-                  })()}
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                  ))}
+                  {categories.length === 0 && (
+                    <div className="p-4 text-center">
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase mb-2">Sem categorias</p>
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        variant="outline"
+                        className="w-full text-[10px] font-black"
+                        onClick={() => {
+                          DEFAULT_CATEGORIES.forEach(cat => createCategory.mutate(cat));
+                        }}
+                      >
+                        RESTAURAR PADRÕES
+                      </Button>
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
               {errors.category && <p className="text-[10px] text-destructive font-bold uppercase">{errors.category}</p>}

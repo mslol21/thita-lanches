@@ -41,6 +41,18 @@ export function CategoriesTable() {
           <Plus className="h-4 w-4" />
           ADICIONAR
         </Button>
+        {categories.length === 0 && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="ml-auto font-bold border-primary text-primary hover:bg-primary/5"
+            onClick={() => {
+              ['Lanches', 'Bebidas', 'Porções', 'Combos', 'Sobremesas', 'Adicionais'].forEach(cat => createCategory.mutate(cat));
+            }}
+          >
+            RESTAURAR PADRÕES
+          </Button>
+        )}
       </form>
 
       <div className="rounded-md border overflow-hidden">

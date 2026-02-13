@@ -110,8 +110,10 @@ export type Database = {
       products: {
         Row: {
           available: boolean
+          category: string | null
           created_at: string
           description: string | null
+          icon: string | null
           id: string
           image_url: string | null
           name: string
@@ -120,8 +122,10 @@ export type Database = {
         }
         Insert: {
           available?: boolean
+          category?: string | null
           created_at?: string
           description?: string | null
+          icon?: string | null
           id?: string
           image_url?: string | null
           name: string
@@ -130,15 +134,25 @@ export type Database = {
         }
         Update: {
           available?: boolean
+          category?: string | null
           created_at?: string
           description?: string | null
+          icon?: string | null
           id?: string
           image_url?: string | null
           name?: string
           price?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["name"]
+          },
+        ]
       }
       user_roles: {
         Row: {
