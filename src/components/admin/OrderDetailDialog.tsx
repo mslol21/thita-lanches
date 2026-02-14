@@ -150,13 +150,13 @@ export function OrderDetailDialog({ order, open, onOpenChange }: OrderDetailDial
               </div>
 
               {/* Summary */}
-              <div className="bg-muted px-6 py-4 rounded-2xl flex items-center justify-between">
-                <div>
+              <div className="bg-muted px-5 sm:px-6 py-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="text-center sm:text-left">
                   <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Total Líquido</p>
-                  <p className="text-4xl font-black text-primary leading-none mt-1">{formatPrice(orderDetails.total_price)}</p>
+                  <p className="text-3xl sm:text-4xl font-black text-primary leading-none mt-1">{formatPrice(orderDetails.total_price)}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button onClick={handlePrint} className="gap-2 font-black uppercase text-[10px] tracking-widest h-12 px-6 shadow-lg shadow-primary/20">
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                  <Button onClick={handlePrint} className="w-full sm:w-auto gap-2 font-black uppercase text-[10px] tracking-widest h-12 px-6 shadow-lg shadow-primary/20">
                     <Printer className="h-4 w-4" />
                     Imprimir Ticket
                   </Button>
@@ -164,7 +164,7 @@ export function OrderDetailDialog({ order, open, onOpenChange }: OrderDetailDial
                     <Button 
                       variant="outline" 
                       onClick={handleCancelOrder} 
-                      className="gap-2 font-black uppercase text-[10px] tracking-widest h-12 px-6 border-destructive/20 text-destructive hover:bg-destructive/10"
+                      className="w-full sm:w-auto gap-2 font-black uppercase text-[10px] tracking-widest h-12 px-6 border-destructive/20 text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4" />
                       Cancelar

@@ -128,23 +128,23 @@ export function ManualOrderDialog({ open, onOpenChange, products }: ManualOrderD
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* Left Side: Product Selection (Largest area) */}
-          <div className="flex-1 flex flex-col bg-muted/20 border-r overflow-hidden">
-            <div className="p-4 border-b bg-white flex flex-col gap-3">
+          <div className="flex-1 flex flex-col bg-muted/20 border-b md:border-b-0 md:border-r overflow-hidden min-h-[40vh] md:min-h-0">
+            <div className="p-3 sm:p-4 border-b bg-white flex flex-col gap-2 sm:gap-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-extrabold flex items-center gap-2 text-primary">
+                <h3 className="font-extrabold flex items-center gap-2 text-primary text-sm sm:text-base">
                   🍔 PRODUTOS
                 </h3>
               </div>
               
               {/* Category selector */}
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
                 {categories.map(cat => (
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border-2 ${
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border-2 ${
                       activeCategory === cat
                         ? 'bg-primary text-white border-primary shadow-md'
                         : 'bg-white text-muted-foreground border-transparent hover:border-muted'
@@ -156,16 +156,16 @@ export function ManualOrderDialog({ open, onOpenChange, products }: ManualOrderD
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
                 {filteredProducts.map(product => (
                   <button
                     key={product.id}
                     onClick={() => addItem(product)}
-                    className="flex flex-col text-left p-4 bg-white border-2 border-transparent rounded-xl hover:border-primary hover:shadow-md transition-all group relative active:scale-95 h-32"
+                    className="flex flex-col text-left p-2 sm:p-4 bg-white border-2 border-transparent rounded-xl hover:border-primary hover:shadow-md transition-all group relative active:scale-95 h-24 sm:h-32"
                   >
-                    <span className="font-black text-sm leading-tight uppercase mb-1 line-clamp-2">{product.name}</span>
-                    <span className="text-lg font-black text-primary mt-auto">
+                    <span className="font-black text-xs sm:text-sm leading-tight uppercase mb-1 line-clamp-2">{product.name}</span>
+                    <span className="text-sm sm:text-lg font-black text-primary mt-auto">
                       {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
                   </button>
@@ -175,7 +175,7 @@ export function ManualOrderDialog({ open, onOpenChange, products }: ManualOrderD
           </div>
 
           {/* Right Side: Order Summary & Customer Info */}
-          <div className="w-96 flex flex-col bg-white overflow-hidden">
+          <div className="w-full md:w-80 lg:w-96 flex flex-col bg-white overflow-hidden border-t md:border-t-0 shadow-inner md:shadow-none">
             <div className="p-6 space-y-6 overflow-y-auto flex-1">
               {/* Context / Type */}
               <div className="space-y-4">

@@ -107,40 +107,53 @@ export default function AdminDashboard() {
     },
   ];
 
+  const { data: categories = [] } = useCategories();
+  const createCategory = useCreateCategory();
+  const [newCat, setNewCat] = useState('');
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newCat.trim()) {
+      createCategory.mutate(newCat.trim());
+      setNewCat('');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="bg-sidebar text-sidebar-foreground border-b border-sidebar-border sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <span className="font-display font-black text-lg sm:text-xl text-primary uppercase tracking-tighter">
-                TALITA PINHA<span className="text-accent italic ml-1">ADMIN</span>
-              </span>
+      <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="container mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+            <Link to="/" className="flex-shrink-0">
+              <img src="/logo.png" alt="Logo" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
+            </Link>
+            <div className="flex flex-col">
+              <h1 className="text-base sm:text-xl font-black tracking-tight leading-none">PAINEL ADMIN</h1>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Controle Total</span>
             </div>
+          </div>
             
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Button 
-                onClick={() => setManualOrderDialogOpen(true)}
-                className="bg-primary text-white hover:bg-primary/90 gap-2 font-black h-9 sm:h-10 px-3 sm:px-6 rounded-full shadow-lg shadow-primary/20 transition-all active:scale-95 text-[10px] sm:text-sm"
-              >
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden xs:inline">NOVO PEDIDO</span>
-                <span className="xs:hidden">NOVO</span>
-              </Button>
-              <Button variant="ghost" size="sm" asChild className="text-sidebar-foreground/70 hover:text-white hidden md:flex">
-                <Link to="/" target="_blank">Ver Cardápio</Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={logout}
-                className="text-sidebar-foreground/70 hover:text-destructive transition-colors"
-                title="Sair"
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button 
+              onClick={() => setManualOrderDialogOpen(true)}
+              className="bg-primary text-white hover:bg-primary/90 gap-2 font-black h-9 sm:h-10 px-3 sm:px-6 rounded-full shadow-lg shadow-primary/20 transition-all active:scale-95 text-[10px] sm:text-sm"
+            >
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden xs:inline">NOVO PEDIDO</span>
+              <span className="xs:hidden">NOVO</span>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-sidebar-foreground/70 hover:text-white hidden md:flex">
+              <Link to="/" target="_blank">Ver Cardápio</Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={logout}
+              className="text-sidebar-foreground/70 hover:text-destructive transition-colors"
+              title="Sair"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
@@ -167,38 +180,34 @@ export default function AdminDashboard() {
 
           <Tabs defaultValue="orders" className="flex-1 flex flex-col min-h-0 space-y-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <TabsList className="bg-muted/50 p-1">
-                <TabsTrigger value="orders" className="gap-2 font-bold px-6">
-                  <ShoppingBag className="h-4 w-4" />
-                  Operação
-                </TabsTrigger>
-                <TabsTrigger value="products" className="gap-2 font-bold px-6">
-                  <Package className="h-4 w-4" />
-                  Produtos
-                </TabsTrigger>
-                <TabsTrigger value="categories" className="gap-2 font-bold px-6">
-                  <List className="h-4 w-4" />
-                  Categorias
-                </TabsTrigger>
-                {/* 
-                <TabsTrigger value="neighborhoods" className="gap-2 font-bold px-6">
-                  <MapPin className="h-4 w-4" />
-                  Bairros
-                </TabsTrigger> 
-                */}
-                <TabsTrigger value="analytics" className="gap-2 font-bold px-6">
-                  <BarChart3 className="h-4 w-4" />
-                  Análises
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="gap-2 font-bold px-6">
-                  <Settings className="h-4 w-4" />
-                  Configurações
-                </TabsTrigger>
-                <TabsTrigger value="system" className="gap-2 font-bold px-6 text-destructive hover:text-destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  Sistema
-                </TabsTrigger>
-              </TabsList>
+              <div className="w-full overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 [mask-image:_linear-gradient(to_right,transparent_0,_black_1rem,_black_calc(100%-1rem),transparent_100%)]">
+                <TabsList className="inline-flex w-max sm:w-auto bg-muted/50 p-1 min-w-full sm:min-w-0">
+                  <TabsTrigger value="orders" className="gap-2 font-bold px-4 sm:px-6">
+                    <ShoppingBag className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Operação</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="products" className="gap-2 font-bold px-4 sm:px-6">
+                    <Package className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Produtos</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="categories" className="gap-2 font-bold px-4 sm:px-6">
+                    <List className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Categorias</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics" className="gap-2 font-bold px-4 sm:px-6">
+                    <BarChart3 className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Análises</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="gap-2 font-bold px-4 sm:px-6">
+                    <Settings className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Configurações</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="system" className="gap-2 font-bold px-4 sm:px-6 text-destructive hover:text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Sistema</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="orders" className="m-0">
                 <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg">
@@ -327,6 +336,32 @@ export default function AdminDashboard() {
                   <CardTitle className="text-lg">Gerenciar Categorias</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
+                  <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2 p-3 sm:p-4 bg-muted/30 rounded-lg sm:rounded-xl">
+                    <Input 
+                      value={newCat}
+                      onChange={(e) => setNewCat(e.target.value)}
+                      placeholder="Nome da nova categoria..."
+                      className="font-bold h-11 sm:h-10"
+                    />
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button type="submit" className="flex-1 sm:flex-none gap-2 font-bold h-11 sm:h-10">
+                        <Plus className="h-4 w-4" />
+                        ADICIONAR
+                      </Button>
+                      {categories.length === 0 && (
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="flex-1 sm:flex-none font-bold border-primary text-primary hover:bg-primary/5 h-11 sm:h-10"
+                          onClick={() => {
+                            ['Lanches', 'Bebidas', 'Porções', 'Combos', 'Sobremesas', 'Adicionais'].forEach(cat => createCategory.mutate(cat));
+                          }}
+                        >
+                          RESTAURAR PADRÕES
+                        </Button>
+                      )}
+                    </div>
+                  </form>
                   <CategoriesTable />
                 </CardContent>
               </Card>
