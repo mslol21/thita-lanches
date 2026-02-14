@@ -25,11 +25,13 @@ import { NeighborhoodsTable } from '@/components/admin/NeighborhoodsTable';
 import { SettingsPanel } from '@/components/admin/SettingsPanel';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrders, useDeleteAllOrders } from '@/hooks/useOrders';
 import { useProducts, useDeleteAllProducts } from '@/hooks/useProducts';
+import { useCategories, useCreateCategory } from '@/hooks/useCategories';
 import { OrdersTable } from '@/components/admin/OrdersTable';
 import { OrdersKanban } from '@/components/admin/OrdersKanban';
 import { ProductsTable } from '@/components/admin/ProductsTable';
